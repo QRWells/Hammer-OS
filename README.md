@@ -1,2 +1,2 @@
 # Hammer-OS
-Hammer OS is an operating system for x86-64.
+Hammer OS is a toy operating system for x86-64.
