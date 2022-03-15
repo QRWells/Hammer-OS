@@ -1,5 +1,7 @@
 .xmake/
+.vscode/
 build/
+out/
 
 temp/
 

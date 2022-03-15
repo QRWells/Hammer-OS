@@ -7,33 +7,10 @@ StartOfStack            equ     0x7c00
 StartOfLoader           equ     0x1000
 OffsetOfLoader          equ     0x00
 
-RootDirSectors          equ     0xe
-SectorNumOfRootDirStart equ     0x13
-SectorNumOfFAT1Start    equ     0x1
-SectorBalance           equ     0x11
-
     jmp Start
     nop
 
-    OEMName             db      "HMOSBOOT"
-    BytesPerSector      dw      0x200
-    SectorsPerCluster   db      0x1
-    ReservedSectors     dw      0x1
-    FATs                db      0x2
-    RootDirEntries      dw      0xe0
-    Sectors             dw      0xb40
-    MediaType           db      0xf0
-    FATSectors          dw      0x9
-    SectorsPerTrack     dw      0x12
-    Heads               dw      0x2
-    HiddenSectors       dd      0
-    TolSec32            dd      0
-    DriveNumber         db      0
-    Reserved            db      0
-    BootSignature       db      0x29
-    VolumeId            dd      0
-    VolumeLabel         db      "BOOT LOADER"
-    FATTypeLabel        db      "FAT12   "
+    %include "fat12.asm"
 
 Start:
     mov     ax,     cs
@@ -173,90 +150,7 @@ Start:
 
     jmp     StartOfLoader:OffsetOfLoader
 
-;   int 13 (CHS format)
-;   al: sectors to read
-;   ch: 8-LSB of track number
-;   cl：sector number(0-5 bit), 2-MSB of track number (6-7 bit, only for HDD)
-;   dh: head number
-;   dl: drive number
-;   es:bx: data buffer
-
-;   Function: read one sector from floppy
-;   ax: base sector number to read (in LBA)
-;   cl: sectors to read
-;   es:bx: data buffer
-;   ax / SectorsPerTrack = [track:head] -> al
-;   ax % SectorsPerTrack = start sector number -> ah
-
-ReadOneSector:
-
-    push    bp                              ; save bp & sp
-    mov     bp,     sp                      ; 
-    sub     esp,    2                       ; allocate 2 bytes
-    mov     byte    [bp - 2],    cl         ; store cl into stack
-    push    bx                              ; save bx
-    mov     bl,     [SectorsPerTrack]       ; 
-    div     bl
-    inc     ah
-    mov     cl,     ah
-    mov     dh,     al
-    shr     al,     1
-    mov     ch,     al
-    and     dh,     1
-    pop     bx                              ; restore bx
-    mov     dl,     [DriveNumber]
-.GoOnReading:
-
-    mov     ah,     2
-    mov     al,     byte    [bp - 2]
-    int     0x13
-    jc      .GoOnReading                    ; if failed to read
-    add     esp,    2
-    pop     bp                              ; restore bp & sp
-    ret
-
-;   Function: get FAT Entry
-
-GetFATEntry:
-
-    push    es
-    push    bx
-    push    ax
-    mov     ax,     00
-    mov     es,     ax
-    pop     ax
-    mov     byte    [Odd],    0
-    mov     bx,     3
-    mul     bx
-    mov     bx,     2
-    div     bx
-    cmp     dx,     0
-    jz      .Even
-    mov     byte    [Odd],    1
-
-.Even:
-
-    xor     dx,     dx
-    mov     bx,     [BytesPerSector]
-    div     bx
-    push    dx
-    mov     bx,     0x8000
-    add     ax,     SectorNumOfFAT1Start
-    mov     cl,     2
-    call    ReadOneSector
-
-    pop     dx
-    add     bx,     dx
-    mov     ax,     [es:bx]
-    cmp     byte    [Odd],    1
-    jnz     .Even2
-    shr     ax,     4
-
-.Even2:
-    and     ax,     0x0fff
-    pop     bx
-    pop     es
-    ret
+    %include "lib.asm"
 
 ;   tmp variable
 
