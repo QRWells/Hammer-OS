@@ -9,3 +9,5 @@ temp/
 *.bin
 *.bxrc
 *.img
+
+*.o
