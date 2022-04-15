@@ -1,3 +1,7 @@
+#include "defs.h"
+
 void kmain(){
-    while(1){}
+    printf("Hello from Moonix!\n");
+    panic("Nothing to do!");
+    while(1);
 }

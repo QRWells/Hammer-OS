@@ -1,8 +1,10 @@
 K=.
 
-OBJS =                \
-    $K/entry.o        \
-    $K/kernel.o
+OBJS =                	\
+    $K/entry.o        	\
+	$K/sbi.o			\
+	$K/printf.o			\
+    $K/kernel.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-
 ifeq ($(shell uname),Darwin)
