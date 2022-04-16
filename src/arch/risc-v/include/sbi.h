@@ -1,3 +1,6 @@
+#ifndef _SBI_H_
+#define _SBI_H_
+
 // sbi call no.
 #define SBI_SET_TIMER 0x0
 #define SBI_CONSOLE_PUTCHAR 0x1
@@ -23,3 +26,5 @@
 #define SBI_ECALL_0(__num) SBI_ECALL(__num, 0, 0, 0)
 #define SBI_ECALL_1(__num, __a0) SBI_ECALL(__num, __a0, 0, 0)
 #define SBI_ECALL_2(__num, __a0, __a1) SBI_ECALL(__num, __a0, __a1, 0)
+
+#endif
