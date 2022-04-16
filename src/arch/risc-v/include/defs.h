@@ -4,8 +4,8 @@
 #include "types.h"
 #include "sbi.h"
 
-void consolePutchar(u64 c);
-u64 consoleGetchar();
+void consolePutchar(usize c);
+usize consoleGetchar();
 void shutdown();
 
 void printf(char *fmt, ...);
