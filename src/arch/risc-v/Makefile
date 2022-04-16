@@ -7,6 +7,7 @@ OBJS =                	\
 	$K/sbi.o			\
     $K/kernel.o			\
 	$K/interrupt.o	 	\
+	$K/timer.o			\
 	$L/printf.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-
