@@ -1,10 +1,11 @@
-K=.
+K=kernel
+L=lib
 
 OBJS =                	\
     $K/entry.o        	\
 	$K/sbi.o			\
-	$K/printf.o			\
     $K/kernel.o			\
+	$L/printf.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-
 ifeq ($(shell uname),Darwin)
@@ -22,7 +23,7 @@ CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
-CFLAGS += -I.
+CFLAGS += -Iinclude
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 LDFLAGS = -z max-page-size=4096
@@ -33,12 +34,16 @@ all: image
 
 image: kernel
 
-kernel: $(subst .c,.o,$(wildcard $K/*.c)) $(subst .S,.o,$(wildcard $K/*.S))
+kernel: $(subst .c,.o,$(wildcard $K/*.c)) $(subst .S,.o,$(wildcard $K/*.S)) $(subst .c,.o,$(wildcard $L/*.c))
 	$(LD) $(LDFLAGS) -T $K/linker.ld -o $K/kernel $(OBJS)
 	$(OBJCOPY) $K/kernel -O binary image
 
 # compile all .c file to .o file
 $K/%.o: $K/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# compile all .c file to .o file
+$L/%.o: $L/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # compile all .S file to .o file

@@ -1,7 +1,7 @@
 #include "defs.h"
 
-void kmain(){
-    printf("Hello from Moonix!\n");
+void main(){
+    printf("Hello from Hammer OS!\n");
     panic("Nothing to do!");
     while(1);
 }

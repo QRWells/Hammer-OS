@@ -4,7 +4,7 @@
 _start:
     la sp, bootstacktop
     
-    call kmain
+    call main
     
     .section .bss.stack
     .align 12
