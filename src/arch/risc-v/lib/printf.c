@@ -23,15 +23,15 @@ static void printint(int xx, int base, int sign) {
     buf[i++] = '-';
 
   while (--i >= 0)
-    consolePutchar(buf[i]);
+    console_putchar(buf[i]);
 }
 
 static void printptr(u64 x) {
   int i;
-  consolePutchar('0');
-  consolePutchar('x');
+  console_putchar('0');
+  console_putchar('x');
   for (i = 0; i < (sizeof(u64) * 2); i++, x <<= 4)
-    consolePutchar(digits[x >> (sizeof(u64) * 8 - 4)]);
+    console_putchar(digits[x >> (sizeof(u64) * 8 - 4)]);
 }
 
 void printf(char *fmt, ...) {
@@ -45,7 +45,7 @@ void printf(char *fmt, ...) {
   va_start(ap, fmt);
   for (i = 0; (c = fmt[i] & 0xff) != 0; i++) {
     if (c != '%') {
-      consolePutchar(c);
+      console_putchar(c);
       continue;
     }
     c = fmt[++i] & 0xff;
@@ -65,22 +65,15 @@ void printf(char *fmt, ...) {
       if ((s = va_arg(ap, char *)) == 0)
         s = "(null)";
       for (; *s; s++)
-        consolePutchar(*s);
+        console_putchar(*s);
       break;
     case '%':
-      consolePutchar('%');
+      console_putchar('%');
       break;
     default:
-      consolePutchar('%');
-      consolePutchar(c);
+      console_putchar('%');
+      console_putchar(c);
       break;
     }
   }
-}
-
-void panic(char *s) {
-  printf("panic: ");
-  printf(s);
-  printf("\n");
-  shutdown();
 }

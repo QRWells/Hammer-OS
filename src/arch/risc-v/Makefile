@@ -1,10 +1,12 @@
 K=kernel
 L=lib
+I=include
 
 OBJS =                	\
     $K/entry.o        	\
 	$K/sbi.o			\
     $K/kernel.o			\
+	$K/interrupt.o	 	\
 	$L/printf.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-
@@ -23,7 +25,7 @@ CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
-CFLAGS += -Iinclude
+CFLAGS += -I$I
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 LDFLAGS = -z max-page-size=4096
