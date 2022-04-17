@@ -39,9 +39,8 @@ void test_alloc() {
 }
 
 void init_memory() {
-  init_frame_allocator(
-      (((usize)(kernel_end)-KERNEL_BEGIN_VADDR + KERNEL_BEGIN_PADDR) >> 12) + 1,
-      MEMORY_END_PADDR >> 12);
+  init_frame_allocator((((usize)(kernel_end)-KERNEL_MAP_OFFSET) >> 12) + 1,
+                       MEMORY_END_PADDR >> 12);
   init_heap();
   printf("***** Init Memory *****\n");
   test_alloc();
