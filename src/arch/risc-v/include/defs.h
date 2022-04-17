@@ -4,6 +4,7 @@
 #include "types.h"
 #include "sbi.h"
 #include "interrupt.h"
+#include "mapping.h"
 
 // sbi.c
 void console_putchar(usize c);
@@ -34,5 +35,9 @@ void kfree(void *p);
 
 // memory.c
 void init_memory();
+usize alloc_frame();
+
+// mapping.c
+void map_kernel();
 
 #endif // _DEFS_H_

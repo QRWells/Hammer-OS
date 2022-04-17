@@ -10,6 +10,7 @@ OBJS =                	\
 	$K/timer.o			\
 	$K/heap.o			\
 	$K/memory.o			\
+	$K/mapping.o		\
 	$L/printf.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-

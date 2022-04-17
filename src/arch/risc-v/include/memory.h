@@ -2,8 +2,7 @@
 #define _MEMORY_H_
 
 #include "types.h"
-
-extern void kernel_end();
+#include "constants.h"
 
 // page size
 #define PAGE_SIZE 4096
