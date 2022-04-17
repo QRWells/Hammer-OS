@@ -5,6 +5,7 @@
 #include "sbi.h"
 #include "interrupt.h"
 #include "mapping.h"
+#include "thread.h"
 
 // sbi.c
 void console_putchar(usize c);
@@ -43,6 +44,9 @@ void map_kernel();
 // thread.c
 void init_thread();
 void switch_thread(thread *self, thread *target);
+
+// threadpool.c
+thread_pool new_thread_pool(scheduler scheduler);
 void add_to_pool(thread_pool *pool, thread thread);
 running_thread acquire_from_pool(thread_pool *pool);
 void retrieve_to_pool(thread_pool *pool, running_thread rt);
@@ -51,5 +55,17 @@ void exit_from_pool(thread_pool *pool, int tid);
 
 // processor.c
 void tick_cpu();
+void idle_main();
+void init_cpu(thread idle, thread_pool pool);
+void add_to_cpu(thread thread);
+void exit_from_cpu(usize code);
+void run_cpu();
+
+// scheduler interface
+void scheduler_init();
+void scheduler_push(int tid);
+int scheduler_pop();
+int scheduler_tick();
+void scheduler_exit(int tid);
 
 #endif // _DEFS_H_

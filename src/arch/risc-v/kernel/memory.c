@@ -42,8 +42,9 @@ void init_memory() {
   init_frame_allocator((((usize)(kernel_end)-KERNEL_MAP_OFFSET) >> 12) + 1,
                        MEMORY_END_PADDR >> 12);
   init_heap();
+  map_kernel();
   printf("***** Init Memory *****\n");
-  test_alloc();
+  // test_alloc();
 }
 
 // implementations of allocator using segment tree

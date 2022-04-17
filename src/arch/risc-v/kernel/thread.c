@@ -59,89 +59,46 @@ thread new_kthread(usize entry) {
   return t;
 }
 
-void temp_thread_func(thread *from, thread *current, usize c) {
-  printf("The char passed by is ");
-  console_putchar(c);
-  console_putchar('\n');
-  printf("Hello world from tempThread!\n");
-  switch_thread(current, from);
-}
-
 thread new_boot_thread() {
   thread t = {0L, 0L};
   return t;
 }
 
-void init_thread() {
-  thread bootThread = new_boot_thread();
-  thread tempThread = new_kthread((usize)temp_thread_func);
-  usize args[8];
-  args[0] = (usize)&bootThread;
-  args[1] = (usize)&tempThread;
-  args[2] = (long)'M';
-  append_arguments(&tempThread, args);
-  switch_thread(&bootThread, &tempThread);
-  printf("I'm back from tempThread!\n");
-}
-
-// ===================thread pool=====================
-
-int alloc_tid(thread_pool *pool) {
+void test_thread(usize arg) {
+  printf("Begin of thread %d\n", arg);
   int i;
-  for (i = 0; i < MAX_THREAD; i++) {
-    // allocate an unused space, return tid
-    if (!pool->threads[i].occupied) {
-      return i;
-    }
+  for (i = 0; i < 1000; i++)
+    printf("%d", arg);
+
+  printf("\nEnd of thread %d\n", arg);
+  exit_from_cpu(0);
+  while (1)
+    ;
+}
+
+void init_thread() {
+  // thread bootThread = new_boot_thread();
+  // thread tempThread = new_kthread((usize)temp_thread_func);
+  // usize args[8];
+  // args[0] = (usize)&bootThread;
+  // args[1] = (usize)&tempThread;
+  // args[2] = (long)'M';
+  // append_arguments(&tempThread, args);
+  // switch_thread(&bootThread, &tempThread);
+  // printf("I'm back from tempThread!\n");
+  scheduler s = {scheduler_init, scheduler_push, scheduler_pop, scheduler_tick,
+                 scheduler_exit};
+  s.init();
+  thread_pool pool = new_thread_pool(s);
+  thread idle = new_kthread((usize)idle_main);
+  init_cpu(idle, pool);
+  usize i;
+  for (i = 0; i < 5; i++) {
+    thread t = new_kthread((usize)test_thread);
+    usize args[8];
+    args[0] = i;
+    append_arguments(&t, args);
+    add_to_cpu(t);
   }
-  panic("Alloc tid failed!\n");
-  return -1;
-}
-
-void add_to_pool(thread_pool *pool, thread thread) {
-  int tid = allocTid(pool);
-  pool->threads[tid].status = (thread_state)READY;
-  pool->threads[tid].occupied = 1;
-  pool->threads[tid].thread = thread;
-  pool->scheduler.push(tid);
-}
-
-// retrieve an available thread from pool, return -1 if no available thread.
-running_thread acquire_from_pool(thread_pool *pool) {
-  int tid = pool->scheduler.pop();
-  running_thread rt;
-  rt.tid = tid;
-  if (tid == -1)
-    return rt;
-
-  thread_info *ti = &pool->threads[tid];
-  ti->status = (thread_state)RUNNING;
-  ti->tid = tid;
-  rt.thread = ti->thread;
-
-  return rt;
-}
-
-// called when a thread is stopped and switch into shcedule thread.
-void retrieve_to_pool(thread_pool *pool, running_thread rt) {
-  int tid = rt.tid;
-  if (!pool->threads[tid].occupied) {
-    // this thread has exited, free its space.
-    kfree((void *)pool->threads[tid].thread.kstack);
-    return;
-  }
-  thread_info *ti = &pool->threads[tid];
-  ti->thread = rt.thread;
-  if (ti->status == (thread_state)RUNNING) {
-    ti->status = (thread_state)READY;
-    pool->scheduler.push(tid);
-  }
-}
-
-int tick_pool(thread_pool *pool) { return pool->scheduler.tick(); }
-
-// free the position of the tid
-void exit_from_pool(thread_pool *pool, int tid) {
-  pool->threads[tid].occupied = 0;
-  pool->scheduler.exit(tid);
+  printf("***** Init Thread *****\n");
 }

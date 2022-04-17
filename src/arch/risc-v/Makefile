@@ -1,25 +1,30 @@
-K=kernel
-L=lib
-I=include
+K = kernel
+L = lib
+I = include
 
-OBJS =                	\
-    $K/entry.o        	\
-	$K/sbi.o			\
-    $K/kernel.o			\
-	$K/interrupt.o	 	\
-	$K/timer.o			\
-	$K/heap.o			\
-	$K/memory.o			\
-	$K/mapping.o		\
-	$K/thread.o			\
-	$K/processor.o 		\
-	$L/printf.o			\
+S = scheduler
+
+OBJS =                		\
+    $K/entry.o        		\
+	$K/sbi.o				\
+    $K/kernel.o				\
+	$K/interrupt.o	 		\
+	$K/timer.o				\
+	$K/heap.o				\
+	$K/memory.o				\
+	$K/mapping.o			\
+	$K/thread.o				\
+	$K/threadpool.o		\
+	$K/processor.o 			\
+	$K/$S/rr_scheduler.o 	\
+	$L/printf.o				\
 
 TOOLPREFIX := riscv64-linux-gnu-
 ifeq ($(shell uname),Darwin)
     TOOLPREFIX=riscv64-unknown-elf-
 endif
 CC = $(TOOLPREFIX)gcc
+CXX = $(TOOLPREFIX)g++
 AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
@@ -42,12 +47,15 @@ all: image
 
 image: kernel
 
-kernel: $(subst .c,.o,$(wildcard $K/*.c)) $(subst .S,.o,$(wildcard $K/*.S)) $(subst .c,.o,$(wildcard $L/*.c))
+kernel: $(subst .c,.o,$(wildcard $K/*.c)) $(subst .c,.o,$(wildcard $K/$S/*.c)) $(subst .S,.o,$(wildcard $K/*.S)) $(subst .c,.o,$(wildcard $L/*.c))
 	$(LD) $(LDFLAGS) -T $K/linker.ld -o $K/kernel $(OBJS)
 	$(OBJCOPY) $K/kernel -O binary image
 
 # compile all .c file to .o file
 $K/%.o: $K/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$K/$S/%.o: $K/$S/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # compile all .c file to .o file
@@ -59,7 +67,7 @@ $K/%.o: $K/%.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f */*.d */*.o $K/kernel image image.asm
+	rm -f */*.d */*.o */*/*.d */*/*.o $K/kernel image image.asm
     
 asm: kernel
 	$(OBJDUMP) -S $K/kernel > image.asm

@@ -23,7 +23,7 @@ void exit_from_cpu(usize code) {
 void run_cpu() {
   // from boot thread to idle and never switch back
   thread boot = {0L, 0L};
-  switchThread(&boot, &cpu.idle);
+  switch_thread(&boot, &cpu.idle);
 }
 
 void idle_main() {
@@ -35,11 +35,11 @@ void idle_main() {
       cpu.occupied = 1;
       printf("\n>>>> will switch_to thread %d in idle_main!\n",
              cpu.current.tid);
-      switchThread(&cpu.idle, &cpu.current.thread);
+      switch_thread(&cpu.idle, &cpu.current.thread);
 
       printf("<<<< switch_back to idle in idle_main!\n");
       cpu.occupied = 0;
-      retrieveToPool(&cpu.pool, cpu.current);
+      retrieve_to_pool(&cpu.pool, cpu.current);
     } else {
       enable_and_wfi();
       disable_and_store();
