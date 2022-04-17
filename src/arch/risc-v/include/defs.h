@@ -42,5 +42,14 @@ void map_kernel();
 
 // thread.c
 void init_thread();
+void switch_thread(thread *self, thread *target);
+void add_to_pool(thread_pool *pool, thread thread);
+running_thread acquire_from_pool(thread_pool *pool);
+void retrieve_to_pool(thread_pool *pool, running_thread rt);
+int tick_pool(thread_pool *pool);
+void exit_from_pool(thread_pool *pool, int tid);
+
+// processor.c
+void tick_cpu();
 
 #endif // _DEFS_H_

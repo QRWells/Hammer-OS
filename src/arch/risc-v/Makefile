@@ -12,6 +12,7 @@ OBJS =                	\
 	$K/memory.o			\
 	$K/mapping.o		\
 	$K/thread.o			\
+	$K/processor.o 		\
 	$L/printf.o			\
 
 TOOLPREFIX := riscv64-linux-gnu-

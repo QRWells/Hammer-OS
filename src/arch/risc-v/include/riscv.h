@@ -64,4 +64,21 @@ static inline u64 r_satp() {
   return x;
 }
 
+// enable asynchroneous interrupt, wait for interrupt
+static inline void enable_and_wfi() {
+  asm volatile("csrsi sstatus, 1 << 1; wfi");
+}
+
+// disable asynchroneous interrupt and save sstatus
+static inline usize disable_and_store() {
+  usize x;
+  asm volatile("csrrci %0, sstatus, 1 << 1" : "=r"(x));
+  return x;
+}
+
+// restore sstatus
+static inline void restore_sstatus(usize flags) {
+  asm volatile("csrs sstatus, %0" ::"r"(flags));
+}
+
 #endif // _RISCV_H_

@@ -21,4 +21,6 @@ extern void kernel_end();
 
 #define KERNEL_STACK_SIZE 0x80000
 
+#define MAX_THREAD 0x40
+
 #endif // _CONSTANTS_H_

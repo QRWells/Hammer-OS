@@ -33,6 +33,7 @@ void breakpoint(interrupt_context *context) {
 
 void supervisor_timer() {
   tick();
+  tick_cpu();
 }
 
 void fault(interrupt_context *context, usize scause, usize stval) {
