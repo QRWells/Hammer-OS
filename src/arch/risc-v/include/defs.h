@@ -27,4 +27,12 @@ void setTimeout();
 void init_timer();
 void tick();
 
+// heap.c
+void init_heap();
+void *kalloc(u32 size);
+void kfree(void *p);
+
+// memory.c
+void init_memory();
+
 #endif // _DEFS_H_
