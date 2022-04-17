@@ -19,4 +19,6 @@ extern void kernel_end();
 
 #define PDE_MASK 0x003ffffffffffC00
 
+#define KERNEL_STACK_SIZE 0x80000
+
 #endif // _CONSTANTS_H_

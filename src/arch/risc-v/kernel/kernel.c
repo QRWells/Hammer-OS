@@ -8,6 +8,7 @@ void main() {
   map_kernel();
   asm volatile("ebreak" :::);
   printf("return from ebreak\n");
+  init_thread();
   while (1)
     ;
 }

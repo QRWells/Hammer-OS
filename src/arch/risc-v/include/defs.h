@@ -40,4 +40,7 @@ usize alloc_frame();
 // mapping.c
 void map_kernel();
 
+// thread.c
+void init_thread();
+
 #endif // _DEFS_H_

@@ -34,6 +34,9 @@ static inline usize r_sie() {
 
 static inline void w_sie(usize x) { asm volatile("csrw sie, %0" : : "r"(x)); }
 
+#define SSTATUS_SUM (1L << 18)
+#define SSTATUS_SPP (1L << 8)
+#define SSTATUS_SPIE (1L << 5)
 #define SSTATUS_SIE (1L << 1) // Supervisor mode Interrupt Enable
 #define SSTATUS_UIE (1L << 0) // User mode Interrupt Enable
 
@@ -52,6 +55,12 @@ static inline void w_sstatus(usize x) {
 static inline usize r_time() {
   usize x;
   asm volatile("csrr %0, time" : "=r"(x));
+  return x;
+}
+
+static inline u64 r_satp() {
+  u64 x;
+  asm volatile("csrr %0, satp" : "=r"(x));
   return x;
 }
 
