@@ -48,7 +48,6 @@ __interrupt:
     SAVE    s2, 33
 
     # call handle_interrupt()
-    # 将 Context 的地址(栈顶)和 scause、stval 作为参数传入
     # pass context address(stack top), scause and stval
     mv      a0, sp
     csrr    a1, scause

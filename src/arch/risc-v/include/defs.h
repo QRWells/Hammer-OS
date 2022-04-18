@@ -23,6 +23,7 @@ void breakpoint(interrupt_context *context);
 void supervisor_timer();
 void fault(interrupt_context *context, usize scause, usize stval);
 void panic(char *s);
+void handle_syscall(interrupt_context *context);
 
 // timer.c
 void setTimeout();
@@ -40,6 +41,9 @@ usize alloc_frame();
 
 // mapping.c
 void map_kernel();
+void map_framed_segment(mapping m, segment segment);
+mapping new_kernel_mapping();
+void map_framed_and_copy(mapping m, segment segment, char *data, usize length);
 
 // thread.c
 void init_thread();
@@ -67,5 +71,12 @@ void scheduler_push(int tid);
 int scheduler_pop();
 int scheduler_tick();
 void scheduler_exit(int tid);
+
+// elf.c
+mapping new_user_mapping(char *elf);
+usize convert_elf_flags(u32 flags);
+
+// syscall.c
+usize syscall(usize id, usize args[3], interrupt_context *context);
 
 #endif // _DEFS_H_

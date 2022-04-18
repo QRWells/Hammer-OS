@@ -56,6 +56,19 @@ void map_linear_segment(mapping self, segment segment) {
   }
 }
 
+void map_framed_segment(mapping m, segment segment) {
+  usize startVpn = segment.start_va / PAGE_SIZE;
+  usize endVpn = (segment.end_va - 1) / PAGE_SIZE + 1;
+  usize vpn;
+  for (vpn = startVpn; vpn < endVpn; vpn++) {
+    pte *entry = find_entry(m, vpn);
+    if (*entry != 0) {
+      panic("Virtual address already mapped!\n");
+    }
+    *entry = (alloc_frame() >> 2) | segment.flags | PTE_VALID;
+  }
+}
+
 mapping new_kernel_mapping() {
   mapping m = new_mapping();
 
@@ -91,4 +104,41 @@ void map_kernel() {
   mapping m = new_kernel_mapping();
   activate_mapping(m);
   printf("***** Remap Kernel *****\n");
+}
+
+// map a segment that has been allocated physical memory
+// and copy date to new allocated memory
+void map_framed_and_copy(mapping m, segment segment, char *data, usize length) {
+  usize s = (usize)data, l = length;
+  usize start_vpn = segment.start_va / PAGE_SIZE;
+  usize end_vpn = (segment.end_va - 1) / PAGE_SIZE + 1;
+  usize vpn;
+  for (vpn = start_vpn; vpn < end_vpn; vpn++) {
+    pte *entry = find_entry(m, vpn);
+    if (*entry != 0)
+      panic("Virtual address already mapped!\n");
+
+    usize pAddr = alloc_frame();
+    *entry = (pAddr >> 2) | segment.flags | PTE_VALID;
+    char *dst = (char *)pa_to_va(pAddr);
+    if (l >= PAGE_SIZE) {
+      char *src = (char *)s;
+      int i;
+      for (i = 0; i < PAGE_SIZE; i++)
+        dst[i] = src[i];
+    } else {
+      char *src = (char *)s;
+      int i;
+      for (i = 0; i < l; i++)
+        dst[i] = src[i];
+
+      for (i = l; i < PAGE_SIZE; i++)
+        dst[i] = 0;
+    }
+    s += PAGE_SIZE;
+    if (l >= PAGE_SIZE)
+      l -= PAGE_SIZE;
+    else
+      l = 0;
+  }
 }

@@ -2,6 +2,7 @@
 #include "thread.h"
 #include "constants.h"
 #include "riscv.h"
+#include "../include/elf.h"
 
 __attribute__((naked, noinline)) void switch_context(usize *self,
                                                      usize *target) {
@@ -101,4 +102,41 @@ void init_thread() {
     add_to_cpu(t);
   }
   printf("***** Init Thread *****\n");
+}
+
+usize new_uthread_context(usize entry, usize ustackTop, usize kstackTop,
+                          usize satp) {
+  interrupt_context ic;
+  ic.x[2] = ustackTop;
+  ic.sepc = entry;
+  ic.sstatus = r_sstatus();
+  // set to U-Mode
+  ic.sstatus &= ~SSTATUS_SPP;
+  // enable async interrupts
+  ic.sstatus |= SSTATUS_SPIE;
+  ic.sstatus &= ~SSTATUS_SIE;
+  thread_context tc;
+  extern void __restore();
+  tc.ra = (usize)__restore;
+  tc.satp = satp;
+  tc.ic = ic;
+  return push_context_to_stack(tc, kstackTop);
+}
+
+thread new_uthread(char *data) {
+  mapping m = new_user_mapping(data);
+  usize ustack_bottom = USER_STACK_OFFSET,
+        ustack_top = USER_STACK_OFFSET + USER_STACK_SIZE;
+  // map user stack
+  segment s = {ustack_bottom, ustack_top,
+               1L | PTE_USER | PTE_READABLE | PTE_WRITABLE};
+  map_framed_segment(m, s);
+
+  usize kstack = new_kstack();
+  usize entry_addr = ((elf_header *)data)->entry;
+  process p = {m.root_ppn | (8L << 60)};
+  usize context = new_uthread_context(entry_addr, ustack_top,
+                                          kstack + KERNEL_STACK_SIZE, p.satp);
+  thread t = {context, kstack, p};
+  return t;
 }

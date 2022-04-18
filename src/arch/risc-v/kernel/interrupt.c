@@ -13,11 +13,14 @@ void init_interrupt() {
 
 void handle_interrupt(interrupt_context *context, usize scause, usize stval) {
   switch (scause) {
-  case 3L:
+  case BREAKPOINT:
     breakpoint(context);
     break;
-  case 5L | (1L << 63):
+  case SUPERVISOR_TIMER:
     supervisor_timer();
+    break;
+  case USER_ENV_CALL:
+    handle_syscall(context);
     break;
   default:
     fault(context, scause, stval);
@@ -47,4 +50,13 @@ void panic(char *s) {
   printf(s);
   printf("\n");
   shutdown();
+}
+
+void handle_syscall(interrupt_context *context) {
+  context->sepc += 4;
+  extern usize syscall(usize id, usize args[3], interrupt_context * context);
+  usize ret = syscall(context->x[17],
+                      (usize[]){context->x[10], context->x[11], context->x[12]},
+                      context);
+  context->x[10] = ret;
 }

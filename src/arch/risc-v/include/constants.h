@@ -20,6 +20,8 @@ extern void kernel_end();
 #define PDE_MASK 0x003ffffffffffC00
 
 #define KERNEL_STACK_SIZE 0x80000
+#define USER_STACK_SIZE 0x80000
+#define USER_STACK_OFFSET 0xffffffff00000000
 
 #define MAX_THREAD 0x40
 

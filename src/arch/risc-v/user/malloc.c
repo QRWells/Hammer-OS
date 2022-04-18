@@ -1,5 +1,12 @@
-#include "defs.h"
-#include "constants.h"
+// almost same as heap.c
+
+#include "types.h"
+#include "ulib.h"
+
+#define USER_HEAP_SIZE 0x1000
+#define MIN_BLOCK_SIZE 0x20
+#define HEAP_BLOCK_NUM 0x80
+#define BUDDY_NODE_NUM 0xff
 
 #define IS_POWER_OF_2(x) (!((x) & ((x)-1)))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -8,7 +15,7 @@
 #define RIGHT_LEAF(index) ((index)*2 + 2)
 #define PARENT(index) (((index) + 1) / 2 - 1)
 
-static u8 HEAP[KERNEL_HEAP_SIZE];
+static u8 HEAP[USER_HEAP_SIZE];
 
 struct {
   u32 size;
@@ -54,15 +61,6 @@ u32 buddy_alloc(u32 size) {
   if (buddy_tree.longest[0] < size) {
     return -1;
   }
-
-  // find first fit node
-  // for(nodeSize = buddy_tree.size; nodeSize != size; nodeSize /= 2) {
-  //     if(buddy_tree.longest[LEFT_LEAF(index)] >= size) {
-  //         index = LEFT_LEAF(index);
-  //     } else {
-  //         index = RIGHT_LEAF(index);
-  //     }
-  // }
 
   // find the best fit node
   for (nodeSize = buddy_tree.size; nodeSize != size; nodeSize /= 2) {
@@ -128,32 +126,9 @@ void buddy_free(u32 offset) {
   }
 }
 
-// test malloc
-void heap_test() {
-  printf("Heap:\t%p\n", HEAP);
-  void *a = kalloc(100);
-  printf("a:\t%p\n", a);
-  void *b = kalloc(60);
-  printf("b:\t%p\n", b);
-  void *c = kalloc(100);
-  printf("c:\t%p\n", c);
-  kfree(a);
-  void *d = kalloc(30);
-  printf("d:\t%p\n", d);
-  kfree(b);
-  kfree(d);
-  kfree(c);
-  a = kalloc(60);
-  printf("a:\t%p\n", a);
-  kfree(a);
-}
+void init_heap() { buddy_init(HEAP_BLOCK_NUM); }
 
-void init_heap() {
-  buddy_init(HEAP_BLOCK_NUM);
-  // heap_test();
-}
-
-void *kalloc(u32 size) {
+void *malloc(u32 size) {
   if (size == 0)
     return 0;
 
@@ -172,11 +147,11 @@ void *kalloc(u32 size) {
   return (void *)begin;
 }
 
-void kfree(void *ptr) {
+void free(void *ptr) {
   // if ptr is valid
   if ((usize)ptr < (usize)HEAP)
     return;
-  if ((usize)ptr >= (usize)HEAP + KERNEL_HEAP_SIZE - MIN_BLOCK_SIZE)
+  if ((usize)ptr >= (usize)HEAP + USER_HEAP_SIZE - MIN_BLOCK_SIZE)
     return;
   // offset of the block in the heap
   u32 offset = (usize)((usize)ptr - (usize)HEAP);

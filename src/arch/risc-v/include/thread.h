@@ -6,6 +6,10 @@
 #include "interrupt.h"
 
 typedef struct {
+    usize satp;
+} process;
+
+typedef struct {
   usize ra;    // return address register
   usize satp;  // satp register
   usize s[12]; // caller saved registers
@@ -15,6 +19,7 @@ typedef struct {
 typedef struct {
   usize context_addr; // address of the thread's context
   usize kstack;       // bottom of stack
+  process process;    // process it belongs to
 } thread;
 
 typedef enum { READY, RUNNING, SLEEPING, EXITED } thread_state;
