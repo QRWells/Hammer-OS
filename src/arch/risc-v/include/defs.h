@@ -79,4 +79,11 @@ usize convert_elf_flags(u32 flags);
 // syscall.c
 usize syscall(usize id, usize args[3], interrupt_context *context);
 
+// fs.c
+void init_fs();
+
+// string.c
+int strcmp(char *s1, char *s2);
+int strlen(char *s);
+
 #endif // _DEFS_H_

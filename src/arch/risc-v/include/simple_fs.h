@@ -26,4 +26,10 @@ typedef struct {
   u32 indirect;    // indirect blocks
 } inode;
 
+
+void walk(char *dir_name, inode *now_inode, u32 now_inode_num);
+u64 get_block_addr(int block_num);
+int get_free_block();
+void copy_inode_to_block(int block_num, inode *in);
+
 #endif // _SIMPLE_FS_H_

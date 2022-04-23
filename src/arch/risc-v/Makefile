@@ -5,7 +5,6 @@ I = include
 S = scheduler
 
 OBJS =                		\
-    $K/entry.o        		\
 	$K/sbi.o				\
     $K/kernel.o				\
 	$K/interrupt.o	 		\
@@ -19,13 +18,17 @@ OBJS =                		\
 	$K/printf.o				\
 	$K/syscall.o			\
 	$K/elf.o				\
+	$K/fs.o					\
+	$K/string.o				\
 	$K/$S/rr_scheduler.o 	\
 
-UPROS =                     \
+USYSPROGS =                 \
     $U/entry.o       		\
     $U/malloc.o      		\
     $U/io.o 				\
-    $U/test.o 				\
+
+UPROGS =				  	\
+    test 					\
 
 TOOLPREFIX := riscv64-linux-gnu-
 ifeq ($(shell uname),Darwin)
@@ -55,13 +58,20 @@ all: image
 
 image: kernel
 
-kernel: $(subst .c,.o,$(wildcard $K/*.c)) $(subst .c,.o,$(wildcard $K/$S/*.c)) $(subst .S,.o,$(wildcard $K/*.S))
+kernel: User $(subst .c,.o,$(wildcard $K/*.c)) $(subst .c,.o,$(wildcard $K/$S/*.c)) $(subst .S,.o,$(wildcard $K/*.S))
 	$(LD) $(LDFLAGS) -T $K/linker.ld -o $K/kernel $(OBJS)
 	$(OBJCOPY) $K/kernel -O binary image
 
-User: $(subst .c,.o,$(wildcard $U/*.c))
-	$(LD) $(LDFLAGS) -o $U/User $(UPROS)
-	cp $U/User User
+User: mksfs $(subst .c,.o,$(wildcard $U/*.c))
+	mkdir -p rootfs/bin
+	for file in $(UPROGS); do\
+		$(LD) $(LDFLAGS) -o rootfs/bin/$$file $(USYSPROGS) $U/$$file.o;\
+	done
+	./mksfs
+
+mksfs:
+	gcc mkfs/mksfs.c -o mksfs -I$I
+	
 
 # compile all .c file to .o file
 $K/%.o: $K/%.c
@@ -70,15 +80,12 @@ $K/%.o: $K/%.c
 $K/$S/%.o: $K/$S/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# compile all .S file to .o file
-$K/%.o: $K/%.S
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $U/%.o: $U/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f */*.d */*.o */*/*.d */*/*.o $K/kernel $U/User image image.asm User
+	rm -f */*.d */*.o */*/*.d */*/*.o $K/kernel $U/User image image.asm User mksfs fs.img
+	rm -rf rootfs
     
 asm: kernel
 	$(OBJDUMP) -S $K/kernel > image.asm
