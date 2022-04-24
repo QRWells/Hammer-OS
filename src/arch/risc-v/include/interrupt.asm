@@ -41,7 +41,7 @@ __interrupt:
         .set    n, n + 1
     .endr
 
-    # 保存 CSR
+    # save CSRs
     csrr    s1, sstatus
     csrr    s2, sepc
     SAVE    s1, 32
