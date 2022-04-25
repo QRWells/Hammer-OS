@@ -4,26 +4,26 @@
 
 mapping new_user_mapping(char *elf) {
   mapping m = new_kernel_mapping();
-  elf_header *eHeader = (elf_header *)elf;
+  elf_header *e_header = (elf_header *)elf;
   // validate ELF header
-  if (eHeader->magic != ELF_MAGIC) {
+  if (e_header->magic != ELF_MAGIC) {
     panic("Unknown file type!");
   }
-  prog_header *pHeader = (prog_header *)((usize)elf + eHeader->phoff);
+  prog_header *p_Header = (prog_header *)((usize)elf + e_header->phoff);
   usize offset;
   int i;
   // traverse program header
-  for (i = 0, offset = (usize)pHeader; i < eHeader->phnum;
+  for (i = 0, offset = (usize)p_Header; i < e_header->phnum;
        i++, offset += sizeof(prog_header)) {
-    pHeader = (prog_header *)offset;
-    if (pHeader->type != ELF_PROG_LOAD) {
+    p_Header = (prog_header *)offset;
+    if (p_Header->type != ELF_PROG_LOAD) {
       continue;
     }
-    usize flags = convert_elf_flags(pHeader->flags);
-    usize vhStart = pHeader->vaddr, vhEnd = vhStart + pHeader->memsz;
+    usize flags = convert_elf_flags(p_Header->flags);
+    usize vhStart = p_Header->vaddr, vhEnd = vhStart + p_Header->memsz;
     segment segment = {vhStart, vhEnd, flags};
-    char *source = (char *)((usize)elf + pHeader->off);
-    map_framed_and_copy(m, segment, source, pHeader->filesz);
+    char *source = (char *)((usize)elf + p_Header->off);
+    map_framed_and_copy(m, segment, source, p_Header->filesz);
   }
   return m;
 }

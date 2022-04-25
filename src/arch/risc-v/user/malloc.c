@@ -22,7 +22,7 @@ struct {
   u32 longest[BUDDY_NODE_NUM];
 } buddy_tree;
 
-int fixSize(int size) {
+int fix_size(int size) {
   int n = size - 1;
   n |= n >> 1;
   n |= n >> 2;
@@ -55,7 +55,7 @@ u32 buddy_alloc(u32 size) {
   if (size <= 0)
     size = 1;
   else if (!IS_POWER_OF_2(size))
-    size = fixSize(size);
+    size = fix_size(size);
 
   // there is no enough space
   if (buddy_tree.longest[0] < size) {
@@ -139,7 +139,7 @@ void *malloc(u32 size) {
     panic("Failed to allocate memory!\n");
 
   // clear part of memory space
-  u32 total = fixSize(n) * MIN_BLOCK_SIZE;
+  u32 total = fix_size(n) * MIN_BLOCK_SIZE;
   u8 *begin = (u8 *)((usize)HEAP + (usize)(block * MIN_BLOCK_SIZE));
   for (u32 i = 0; i < total; i++)
     begin[i] = 0;

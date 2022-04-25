@@ -1,8 +1,9 @@
-#include "defs.h"
+#include "../include/elf.h"
 #include "thread.h"
 #include "constants.h"
+#include "defs.h"
+#include "fs.h"
 #include "riscv.h"
-#include "../include/elf.h"
 
 __attribute__((naked, noinline)) void switch_context(usize *self,
                                                      usize *target) {
@@ -18,8 +19,8 @@ usize new_kstack() {
   return bottom;
 }
 
-usize push_context_to_stack(thread_context self, usize stackTop) {
-  thread_context *ptr = (thread_context *)(stackTop - sizeof(thread_context));
+usize push_context_to_stack(thread_context self, usize stack_top) {
+  thread_context *ptr = (thread_context *)(stack_top - sizeof(thread_context));
   *ptr = self;
   return (usize)ptr;
 }
@@ -56,6 +57,7 @@ thread new_kthread(usize entry) {
   usize stackBottom = new_kstack();
   usize contextAddr =
       new_kthread_context(entry, stackBottom + KERNEL_STACK_SIZE, r_satp());
+  printf("kthread entry at: %p\n", entry);
   thread t = {contextAddr, stackBottom};
   return t;
 }
@@ -78,36 +80,36 @@ void test_thread(usize arg) {
 }
 
 void init_thread() {
-  // thread bootThread = new_boot_thread();
-  // thread tempThread = new_kthread((usize)temp_thread_func);
-  // usize args[8];
-  // args[0] = (usize)&bootThread;
-  // args[1] = (usize)&tempThread;
-  // args[2] = (long)'M';
-  // append_arguments(&tempThread, args);
-  // switch_thread(&bootThread, &tempThread);
-  // printf("I'm back from tempThread!\n");
   scheduler s = {scheduler_init, scheduler_push, scheduler_pop, scheduler_tick,
                  scheduler_exit};
   s.init();
   thread_pool pool = new_thread_pool(s);
   thread idle = new_kthread((usize)idle_main);
   init_cpu(idle, pool);
-  usize i;
-  for (i = 0; i < 5; i++) {
+
+  for (usize i = 0; i < 5; i++) {
     thread t = new_kthread((usize)test_thread);
     usize args[8];
     args[0] = i;
     append_arguments(&t, args);
     add_to_cpu(t);
   }
+
+  // inode *test_inode = lookup(0, "/bin/test");
+  // char *buf = kalloc(test_inode->size);
+  // read_all(test_inode, buf);
+  // thread t = new_uthread(buf);
+  // kfree(buf);
+
+  // add_to_cpu(t);
+
   printf("***** Init Thread *****\n");
 }
 
-usize new_uthread_context(usize entry, usize ustackTop, usize kstackTop,
+usize new_uthread_context(usize entry, usize ustack_top, usize kstack_top,
                           usize satp) {
   interrupt_context ic;
-  ic.x[2] = ustackTop;
+  ic.x[2] = ustack_top;
   ic.sepc = entry;
   ic.sstatus = r_sstatus();
   // set to U-Mode
@@ -120,7 +122,7 @@ usize new_uthread_context(usize entry, usize ustackTop, usize kstackTop,
   tc.ra = (usize)__restore;
   tc.satp = satp;
   tc.ic = ic;
-  return push_context_to_stack(tc, kstackTop);
+  return push_context_to_stack(tc, kstack_top);
 }
 
 thread new_uthread(char *data) {
@@ -134,9 +136,10 @@ thread new_uthread(char *data) {
 
   usize kstack = new_kstack();
   usize entry_addr = ((elf_header *)data)->entry;
-  process p = {m.root_ppn | (8L << 60)};
+  printf("uthread entry at: %p\n", entry_addr);
+  process p = {m.root_ppn | (1L << 63)};
   usize context = new_uthread_context(entry_addr, ustack_top,
-                                          kstack + KERNEL_STACK_SIZE, p.satp);
+                                      kstack + KERNEL_STACK_SIZE, p.satp);
   thread t = {context, kstack, p};
   return t;
 }

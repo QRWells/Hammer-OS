@@ -1,6 +1,6 @@
-#include "thread.h"
 #include "defs.h"
 #include "riscv.h"
+#include "thread.h"
 
 static processor cpu;
 
@@ -48,14 +48,14 @@ void idle_main() {
 }
 
 void tick_cpu() {
-  if (cpu.occupied) {
-    if (tick_pool(&cpu.pool)) {
-      // when runs out the time slice, switch back to idle
-      usize flags = disable_and_store();
-      switch_thread(&cpu.current.thread, &cpu.idle);
+  if (!cpu.occupied)
+    return;
+  if (!tick_pool(&cpu.pool))
+    return;
+  // when runs out the time slice, switch back to idle
+  usize flags = disable_and_store();
+  switch_thread(&cpu.current.thread, &cpu.idle);
 
-      // switch back to current thread and restore flags
-      restore_sstatus(flags);
-    }
-  }
+  // switch back to current thread and restore flags
+  restore_sstatus(flags);
 }
