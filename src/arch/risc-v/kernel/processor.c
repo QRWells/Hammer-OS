@@ -1,4 +1,5 @@
 #include "defs.h"
+#include "fs.h"
 #include "riscv.h"
 #include "thread.h"
 
@@ -16,7 +17,9 @@ void exit_from_cpu(usize code) {
   disable_and_store();
   int tid = cpu.current.tid;
   exit_from_pool(&cpu.pool, tid);
-  printf("Thread %d exited, exit code = %d\n", tid, code);
+  if (cpu.current.thread.waiting_tid != -1)
+    wakeup_cpu(cpu.current.thread.waiting_tid);
+
   switch_thread(&cpu.current.thread, &cpu.idle);
 }
 
@@ -33,11 +36,7 @@ void idle_main() {
     if (rt.tid != -1) {
       cpu.current = rt;
       cpu.occupied = 1;
-      printf("\n>>>> will switch_to thread %d in idle_main!\n",
-             cpu.current.tid);
       switch_thread(&cpu.idle, &cpu.current.thread);
-
-      printf("<<<< switch_back to idle in idle_main!\n");
       cpu.occupied = 0;
       retrieve_to_pool(&cpu.pool, cpu.current);
     } else {
@@ -58,4 +57,40 @@ void tick_cpu() {
 
   // switch back to current thread and restore flags
   restore_sstatus(flags);
+}
+
+int get_current_tid() { return cpu.current.tid; }
+thread *get_current_thread() { return &cpu.current.thread; }
+
+void yield_cpu() {
+  if (cpu.occupied) {
+    usize flags = disable_and_store();
+    int tid = cpu.current.tid;
+    thread_info *ti = &cpu.pool.threads[tid];
+    ti->status = SLEEPING;
+    switch_thread(&cpu.current.thread, &cpu.idle);
+
+    restore_sstatus(flags);
+  }
+}
+
+void wakeup_cpu(int tid) {
+  thread_info *ti = &cpu.pool.threads[tid];
+  ti->status = READY;
+  scheduler_push(tid);
+}
+
+int execute_cpu(char *path, int hostTid) {
+  inode *res = lookup(0, path);
+  if (res == 0) {
+    printf("Command not found!\n");
+    return 0;
+  }
+  char *buf = kalloc(res->size);
+  read_all(res, buf);
+  thread t = new_uthread(buf);
+  t.waiting_tid = hostTid;
+  kfree(buf);
+  add_to_cpu(t);
+  return 1;
 }

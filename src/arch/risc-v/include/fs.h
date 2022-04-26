@@ -1,8 +1,8 @@
 #ifndef _FS_H_
 #define _FS_H_
 
-#include "types.h"
 #include "simple_fs.h"
+#include "types.h"
 
 typedef struct {
   u8 filename[28];

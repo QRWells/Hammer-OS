@@ -1,5 +1,5 @@
-#include "thread.h"
 #include "defs.h"
+#include "thread.h"
 
 thread_pool new_thread_pool(scheduler scheduler) {
   thread_pool pool;

@@ -20,6 +20,8 @@ OBJS =                		\
 	$K/elf.o				\
 	$K/fs.o					\
 	$K/string.o				\
+	$K/cond_var.o			\
+	$K/stdin.o				\
 	$K/$S/rr_scheduler.o 	\
 
 USYSPROGS =                 \
@@ -29,6 +31,8 @@ USYSPROGS =                 \
 
 UPROGS =				  	\
     test 					\
+	echo					\
+	sh						\
 
 TOOLPREFIX := riscv64-linux-gnu-
 ifeq ($(shell uname),Darwin)
@@ -64,8 +68,8 @@ kernel: User $(subst .c,.o,$(wildcard $K/*.c)) $(subst .c,.o,$(wildcard $K/$S/*.
 
 User: mksfs $(subst .c,.o,$(wildcard $U/*.c))
 	mkdir -p rootfs/bin
-	for file in $(UPROGS); do\
-		$(LD) $(LDFLAGS) -o rootfs/bin/$$file $(USYSPROGS) $U/$$file.o;\
+	for file in $(UPROGS); do											\
+		$(LD) $(LDFLAGS) -o rootfs/bin/$$file $(USYSPROGS) $U/$$file.o;	\
 	done
 	./mksfs
 

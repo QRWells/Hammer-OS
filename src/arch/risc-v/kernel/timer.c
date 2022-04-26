@@ -1,7 +1,6 @@
-#include "riscv.h"
 #include "defs.h"
+#include "riscv.h"
 
-static usize TICKS = 0;
 static const usize INTERVAL = 100000;
 
 void setTimeout() { set_timer(r_time() + INTERVAL); }
@@ -12,10 +11,4 @@ void init_timer() {
   setTimeout();
 }
 
-void tick() {
-  setTimeout();
-  TICKS += 1;
-  if (TICKS % 100 == 0) {
-    printf("** %d ticks **\n", TICKS);
-  }
-}
+void tick() { setTimeout(); }

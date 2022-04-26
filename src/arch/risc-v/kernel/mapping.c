@@ -57,10 +57,10 @@ void map_linear_segment(mapping self, segment segment) {
 }
 
 void map_framed_segment(mapping m, segment segment) {
-  usize startVpn = segment.start_va / PAGE_SIZE;
-  usize endVpn = (segment.end_va - 1) / PAGE_SIZE + 1;
+  usize start_vpn = segment.start_va / PAGE_SIZE;
+  usize end_vpn = (segment.end_va - 1) / PAGE_SIZE + 1;
   usize vpn;
-  for (vpn = startVpn; vpn < endVpn; vpn++) {
+  for (vpn = start_vpn; vpn < end_vpn; vpn++) {
     pte *entry = find_entry(m, vpn);
     if (*entry != 0) {
       panic("Virtual address already mapped!\n");
@@ -102,6 +102,7 @@ mapping new_kernel_mapping() {
 
 void map_kernel() {
   mapping m = new_kernel_mapping();
+  map_ext_interrupt_area(m);
   activate_mapping(m);
   printf("***** Remap Kernel *****\n");
 }
@@ -123,16 +124,14 @@ void map_framed_and_copy(mapping m, segment segment, char *data, usize length) {
     char *dst = (char *)pa_to_va(pAddr);
     if (l >= PAGE_SIZE) {
       char *src = (char *)s;
-      int i;
-      for (i = 0; i < PAGE_SIZE; i++)
+      for (int i = 0; i < PAGE_SIZE; i++)
         dst[i] = src[i];
     } else {
       char *src = (char *)s;
-      int i;
-      for (i = 0; i < l; i++)
+      for (int i = 0; i < l; i++)
         dst[i] = src[i];
 
-      for (i = l; i < PAGE_SIZE; i++)
+      for (int i = l; i < PAGE_SIZE; i++)
         dst[i] = 0;
     }
     s += PAGE_SIZE;
@@ -141,4 +140,26 @@ void map_framed_and_copy(mapping m, segment segment, char *data, usize length) {
     else
       l = 0;
   }
+}
+
+void map_ext_interrupt_area(mapping m) {
+  segment s1 = {(usize)0x0C000000 + KERNEL_MAP_OFFSET,
+                (usize)0x0C001000 + KERNEL_MAP_OFFSET,
+                PTE_VALID | PTE_READABLE | PTE_WRITABLE};
+  map_linear_segment(m, s1);
+
+  segment s2 = {(usize)0x0C002000 + KERNEL_MAP_OFFSET,
+                (usize)0x0C003000 + KERNEL_MAP_OFFSET,
+                PTE_VALID | PTE_READABLE | PTE_WRITABLE};
+  map_linear_segment(m, s2);
+
+  segment s3 = {(usize)0x0C201000 + KERNEL_MAP_OFFSET,
+                (usize)0x0C202000 + KERNEL_MAP_OFFSET,
+                PTE_VALID | PTE_READABLE | PTE_WRITABLE};
+  map_linear_segment(m, s3);
+
+  segment s4 = {(usize)0x10000000 + KERNEL_MAP_OFFSET,
+                (usize)0x10001000 + KERNEL_MAP_OFFSET,
+                PTE_VALID | PTE_READABLE | PTE_WRITABLE};
+  map_linear_segment(m, s4);
 }

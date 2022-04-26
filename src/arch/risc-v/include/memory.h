@@ -1,8 +1,8 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
-#include "types.h"
 #include "constants.h"
+#include "types.h"
 
 // page size
 #define PAGE_SIZE 4096

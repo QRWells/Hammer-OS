@@ -1,5 +1,6 @@
 #ifndef _INTERRUPT_H_
 #define _INTERRUPT_H_
+
 #include "types.h"
 
 // interrupt context, scause and stval as parameters, no need to save

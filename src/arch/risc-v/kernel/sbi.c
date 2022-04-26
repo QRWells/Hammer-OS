@@ -1,7 +1,7 @@
 #include "defs.h"
 
 #ifdef __INTELLISENSE__
-    #pragma diag_suppress 1118
+#pragma diag_suppress 1118
 #endif
 
 void console_putchar(usize c) { SBI_ECALL_1(SBI_CONSOLE_PUTCHAR, c); }

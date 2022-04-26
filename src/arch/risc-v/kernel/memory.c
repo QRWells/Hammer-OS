@@ -1,5 +1,6 @@
-#include "defs.h"
 #include "../include/memory.h"
+#include "defs.h"
+#include "riscv.h"
 #include "types.h"
 
 frame_allocator frameAllocator;
@@ -18,8 +19,9 @@ void init_frame_allocator(usize start_ppn, usize end_ppn) {
 usize alloc_frame() {
   char *start = (char *)(alloc() << 12);
   int i;
+  char *v_start = (char *)(start + KERNEL_MAP_OFFSET);
   for (i = 0; i < PAGE_SIZE; i++) {
-    start[i] = 0;
+    v_start[i] = 0;
   }
   return (usize)start;
 }
@@ -39,6 +41,7 @@ void test_alloc() {
 }
 
 void init_memory() {
+  w_sstatus(r_sstatus() | SSTATUS_SUM);
   init_frame_allocator((((usize)(kernel_end)-KERNEL_MAP_OFFSET) >> 12) + 1,
                        MEMORY_END_PADDR >> 12);
   init_heap();

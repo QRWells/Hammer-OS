@@ -1,7 +1,7 @@
-#include <stdarg.h>
+#include "./syscall.h"
 #include "types.h"
 #include "ulib.h"
-#include "./syscall.h"
+#include <stdarg.h>
 
 static char digits[] = "0123456789abcdef";
 

@@ -1,8 +1,8 @@
 #ifndef _MAPPING_H__
 #define _MAPPING_H__
 
-#include "types.h"
 #include "memory.h"
+#include "types.h"
 
 typedef usize pte;
 

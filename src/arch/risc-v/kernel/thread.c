@@ -1,5 +1,5 @@
-#include "../include/elf.h"
 #include "thread.h"
+#include "../include/elf.h"
 #include "constants.h"
 #include "defs.h"
 #include "fs.h"
@@ -19,10 +19,17 @@ usize new_kstack() {
   return bottom;
 }
 
-usize push_context_to_stack(thread_context self, usize stack_top) {
-  thread_context *ptr = (thread_context *)(stack_top - sizeof(thread_context));
-  *ptr = self;
-  return (usize)ptr;
+usize push_context_to_stack(thread_context tc, interrupt_context ic,
+                            usize stack_top) {
+  interrupt_context *ptr1 =
+      (interrupt_context *)(stack_top - sizeof(interrupt_context));
+  *ptr1 = ic;
+
+  thread_context *ptr2 =
+      (thread_context *)((usize)ptr1 - sizeof(thread_context));
+  *ptr2 = tc;
+
+  return (usize)ptr2;
 }
 
 usize new_kthread_context(usize entry, usize kstack_top, usize satp) {
@@ -37,20 +44,7 @@ usize new_kthread_context(usize entry, usize kstack_top, usize satp) {
   extern void __restore();
   tc.ra = (usize)__restore;
   tc.satp = satp;
-  tc.ic = ic;
-  return push_context_to_stack(tc, kstack_top);
-}
-
-void append_arguments(thread *thread, usize args[8]) {
-  thread_context *ptr = (thread_context *)thread->context_addr;
-  ptr->ic.x[10] = args[0];
-  ptr->ic.x[11] = args[1];
-  ptr->ic.x[12] = args[2];
-  ptr->ic.x[13] = args[3];
-  ptr->ic.x[14] = args[4];
-  ptr->ic.x[15] = args[5];
-  ptr->ic.x[16] = args[6];
-  ptr->ic.x[17] = args[7];
+  return push_context_to_stack(tc, ic, kstack_top);
 }
 
 thread new_kthread(usize entry) {
@@ -67,18 +61,6 @@ thread new_boot_thread() {
   return t;
 }
 
-void test_thread(usize arg) {
-  printf("Begin of thread %d\n", arg);
-  int i;
-  for (i = 0; i < 1000; i++)
-    printf("%d", arg);
-
-  printf("\nEnd of thread %d\n", arg);
-  exit_from_cpu(0);
-  while (1)
-    ;
-}
-
 void init_thread() {
   scheduler s = {scheduler_init, scheduler_push, scheduler_pop, scheduler_tick,
                  scheduler_exit};
@@ -87,21 +69,13 @@ void init_thread() {
   thread idle = new_kthread((usize)idle_main);
   init_cpu(idle, pool);
 
-  for (usize i = 0; i < 5; i++) {
-    thread t = new_kthread((usize)test_thread);
-    usize args[8];
-    args[0] = i;
-    append_arguments(&t, args);
-    add_to_cpu(t);
-  }
+  inode *test_inode = lookup(0, "/bin/sh");
+  char *buf = kalloc(test_inode->size);
+  read_all(test_inode, buf);
+  thread t = new_uthread(buf);
+  kfree(buf);
 
-  // inode *test_inode = lookup(0, "/bin/test");
-  // char *buf = kalloc(test_inode->size);
-  // read_all(test_inode, buf);
-  // thread t = new_uthread(buf);
-  // kfree(buf);
-
-  // add_to_cpu(t);
+  add_to_cpu(t);
 
   printf("***** Init Thread *****\n");
 }
@@ -121,17 +95,16 @@ usize new_uthread_context(usize entry, usize ustack_top, usize kstack_top,
   extern void __restore();
   tc.ra = (usize)__restore;
   tc.satp = satp;
-  tc.ic = ic;
-  return push_context_to_stack(tc, kstack_top);
+  return push_context_to_stack(tc, ic, kstack_top);
 }
 
 thread new_uthread(char *data) {
   mapping m = new_user_mapping(data);
-  usize ustack_bottom = USER_STACK_OFFSET,
-        ustack_top = USER_STACK_OFFSET + USER_STACK_SIZE;
+  usize ustack_bottom = USER_STACK_OFFSET;
+  usize ustack_top = USER_STACK_OFFSET + USER_STACK_SIZE;
   // map user stack
   segment s = {ustack_bottom, ustack_top,
-               1L | PTE_USER | PTE_READABLE | PTE_WRITABLE};
+               PTE_VALID | PTE_USER | PTE_READABLE | PTE_WRITABLE};
   map_framed_segment(m, s);
 
   usize kstack = new_kstack();

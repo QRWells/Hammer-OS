@@ -1,6 +1,6 @@
 #include "../include/elf.h"
-#include "mapping.h"
 #include "defs.h"
+#include "mapping.h"
 
 mapping new_user_mapping(char *elf) {
   mapping m = new_kernel_mapping();

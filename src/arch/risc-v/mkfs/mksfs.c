@@ -1,11 +1,11 @@
-#include <stdio.h>
 #include <dirent.h>
-#include <sys/stat.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
-#include "types.h"
 #include "simple_fs.h"
+#include "types.h"
 
 // Declare the file system with 1MB of space
 #define BLOCK_NUM 256
