@@ -1,0 +1,23 @@
+#ifndef _KERNEL_H_
+#define _KERNEL_H_
+
+#include "cr.h"
+
+// START macros must have the same value in the kernel linker script
+#define KERNEL_PHYSICAL_START 0x0000000000400000
+#define KERNEL_VIRTUAL_START  0xFFFFFFFF80400000
+
+#define KERNEL_GDT_ENTRY 1
+
+#define KERNEL_CR0                                                             \
+  (                                                                            \
+   CONTROL_REGISTER0_PAGE |                                                    \
+   CONTROL_REGISTER0_PROTECTED_MODE_ENABLED |                                  \
+   CONTROL_REGISTER0_EXTENSION_TYPE                                            \
+  )
+#define KERNEL_CR4 (CONTROL_REGISTER4_PHYSICAL_ADDRESS_EXTENSION)
+
+#define KERNEL_BOOT_STACK_SIZE 0x4000
+#define KERNEL_BOOT_STACK_ALIGNMENT 0x1000
+
+#endif // _KERNEL_H_
