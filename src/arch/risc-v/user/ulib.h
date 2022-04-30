@@ -13,4 +13,8 @@ void putchar(int c);
 void *malloc(u32 size);
 void free(void *ptr);
 
+// string.c
+int strlen(char *str);
+int strcmp(char *str1, char *str2);
+
 #endif // _ULIB_H_

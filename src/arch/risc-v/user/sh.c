@@ -6,10 +6,10 @@
 #define CR 0x0du
 #define BS 0x08u
 #define DL 0x7fu
+#define CTRLC 0x03u
 
-int isEmpty(char *line, int length) {
-  int i;
-  for (i = 0; i < length; i++) {
+int is_empty(char *line, int length) {
+  for (int i = 0; i < length; i++) {
     if (line[i] == 0)
       break;
     if (line[i] != ' ' && line[i] != '\t') {
@@ -20,16 +20,62 @@ int isEmpty(char *line, int length) {
 }
 
 void empty(char *line, int length) {
-  int i;
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     line[i] = 0;
   }
+}
+
+int test_str(char *str, char *target) {
+  int target_len = strlen(target);
+  int str_len = strlen(str);
+  if (str_len >= target_len) {
+    for (int i = 0; i < target_len; i++) {
+      if (str[i] != target[i]) {
+        return 0;
+      }
+    }
+    if (str[2] != ' ' && str[2] != '\t' && str[2] != '\0')
+      return 0;
+  }
+  return 1;
+}
+
+int is_builtin(char *line, int fd) {
+  if (!strcmp("shutdown", line)) {
+    sys_shut();
+    return 1;
+  }
+  // int len = strlen(line);
+  if (test_str(line, "ls")) {
+    line += 3;
+    while (*line == ' ' || *line == '\t')
+      line++;
+    sys_lsdir(line, fd);
+    return 1;
+  }
+  if (test_str(line, "cd")) {
+    line += 3;
+    while (*line == ' ' || *line == '\t')
+      line++;
+    if (*line == 0) {
+      printf("cd: need a path\n");
+      return 1;
+    }
+    sys_cddir(line, fd);
+    return 1;
+  }
+  if (test_str(line, "pwd")) {
+    sys_pwd(fd);
+    return 1;
+  }
+  return 0;
 }
 
 u64 main() {
   char line[256];
   int lineCount = 0;
-  printf("Welcome to Hammer-OS!\n");
+  int fd = sys_open("/");
+  printf("Welcome to Moonix!\n");
   printf("$ ");
   while (1) {
     u8 c = getc();
@@ -37,11 +83,21 @@ u64 main() {
     case LF:
     case CR:
       printf("\n");
-      if (!isEmpty(line, 256)) {
-        sys_exec(line, 0);
+      if (!is_empty(line, 256)) {
+        char *strip = line;
+        while (*strip == ' ' || *strip == '\t')
+          strip++;
+        if (!is_builtin(strip, fd))
+          sys_exec(strip, fd);
         lineCount = 0;
         empty(line, 256);
       }
+      printf("$ ");
+      break;
+    case CTRLC:
+      printf("\n");
+      lineCount = 0;
+      empty(line, 256);
       printf("$ ");
       break;
     case DL:
