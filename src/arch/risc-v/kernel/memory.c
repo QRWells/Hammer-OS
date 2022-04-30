@@ -18,9 +18,8 @@ void init_frame_allocator(usize start_ppn, usize end_ppn) {
 // get start address of physical page
 usize alloc_frame() {
   char *start = (char *)(alloc() << 12);
-  int i;
   char *v_start = (char *)(start + KERNEL_MAP_OFFSET);
-  for (i = 0; i < PAGE_SIZE; i++) {
+  for (int i = 0; i < PAGE_SIZE; i++) {
     v_start[i] = 0;
   }
   return (usize)start;

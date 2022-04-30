@@ -18,11 +18,16 @@ typedef struct {
 #define TYPE_DIR 1
 
 typedef struct {
+  u8 filename[28];
+  u32 block;
+} inode_item;
+
+typedef struct {
   u32 size;        // size of file, 0 for directory
   u32 type;        // type of file
   u8 filename[32]; // file name
   u32 blocks;      // blocks used by file
-  u32 direct[12];  // direct blocks
+  inode_item direct[12];  // direct blocks
   u32 indirect;    // indirect blocks
 } inode;
 

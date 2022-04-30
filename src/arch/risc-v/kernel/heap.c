@@ -29,9 +29,8 @@ int fix_size(int size) {
 void buddy_init(int size) {
   buddy_tree.size = size;
   u32 node_size = size << 1;
-  int i;
   // initialize all nodes to be free
-  for (i = 0; i < (size << 1) - 1; i++) {
+  for (int i = 0; i < (size << 1) - 1; i++) {
     if (IS_POWER_OF_2(i + 1))
       node_size /= 2;
 

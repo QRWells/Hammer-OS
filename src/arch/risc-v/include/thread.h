@@ -4,9 +4,12 @@
 #include "constants.h"
 #include "interrupt.h"
 #include "types.h"
+#include "fs.h"
 
 typedef struct {
   usize satp;
+  file fd[16];
+  u8 fd_occupied[16];
 } process;
 
 typedef struct {

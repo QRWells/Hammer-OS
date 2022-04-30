@@ -25,7 +25,10 @@ void exit_from_cpu(usize code) {
 
 void run_cpu() {
   // from boot thread to idle and never switch back
-  thread boot = {0L, 0L};
+  thread boot;
+  boot.context_addr = 0;
+  boot.kstack = 0;
+  boot.waiting_tid = -1;
   switch_thread(&boot, &cpu.idle);
 }
 

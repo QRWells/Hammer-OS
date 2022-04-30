@@ -4,10 +4,14 @@
 #include "simple_fs.h"
 #include "types.h"
 
+#define FD_NONE 0
+#define FD_INODE 1
+
 typedef struct {
-  u8 filename[28];
-  u32 block;
-} inode_item;
+  u8 fd_type;
+  inode *inode;
+  usize offset;
+} file;
 
 u64 get_block_addr(int block_num);
 inode *lookup(inode *node, char *file_name);

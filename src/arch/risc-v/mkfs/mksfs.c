@@ -23,8 +23,7 @@ char image[BLOCK_SIZE * BLOCK_NUM];
 
 void main() {
   free_map[0] = 1;
-  int i;
-  for (i = 0; i < FREEMAP_NUM; i++)
+  for (int i = 0; i < FREEMAP_NUM; i++)
     free_map[1 + i] = 1;
   free_map[FREEMAP_NUM + 1] = 1;
   free_num -= (FREEMAP_NUM + 2);
@@ -34,6 +33,7 @@ void main() {
   s_block.blocks = BLOCK_NUM;
   s_block.freemapBlocks = FREEMAP_NUM;
   char *info = "SimpleFS";
+  int i;
   for (i = 0; i < strlen(info); i++) {
     s_block.info[i] = info[i];
   }
@@ -76,24 +76,26 @@ void main() {
   fclose(img);
 }
 
-void walk(char *dir_name, inode *now_inode, u32 now_inode_num) {
-  // open pwd
-  DIR *dp = opendir(dir_name);
+void walk(char *dirName, inode *nowInode, u32 nowInodeNum) {
+  DIR *dp = opendir(dirName);
   struct dirent *dirp;
 
-  // first file is "."
-  now_inode->direct[0] = now_inode_num;
-  if (!strcmp(dir_name, rootdir)) {
-    now_inode->direct[1] = now_inode_num;
+  inode_item ii = {".", nowInodeNum};
+  nowInode->direct[0] = ii;
+  if (!strcmp(dirName, rootdir)) {
+    ii.filename[1] = '.';
+    ii.filename[2] = 0;
+    nowInode->direct[1] = ii;
   }
-  int empty_index = 2;
+  int emptyIndex = 2;
 
   while ((dirp = readdir(dp))) {
     if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, "..")) {
       continue;
     }
-    int block_num;
+    int blockNum;
     if (dirp->d_type == DT_DIR) {
+      /* 文件夹处理，递归遍历 */
       inode dinode;
       dinode.size = 0;
       dinode.type = TYPE_DIR;
@@ -102,14 +104,14 @@ void walk(char *dir_name, inode *now_inode, u32 now_inode_num) {
         dinode.filename[i] = dirp->d_name[i];
       }
       dinode.filename[i] = '\0';
-      block_num = get_free_block();
-      dinode.direct[0] = block_num;
-      dinode.direct[1] = now_inode_num;
-      char *tmp = (char *)malloc(strlen(dir_name) + strlen(dirp->d_name) + 1);
-      sprintf(tmp, "%s/%s", dir_name, dirp->d_name);
-      walk(tmp, &dinode, block_num);
+      blockNum = get_free_block();
+      inode_item upIi = {"..", nowInodeNum};
+      dinode.direct[1] = upIi;
+      char *tmp = (char *)malloc(strlen(dirName) + strlen(dirp->d_name) + 1);
+      sprintf(tmp, "%s/%s", dirName, dirp->d_name);
+      walk(tmp, &dinode, blockNum);
 
-      copy_inode_to_block(block_num, &dinode);
+      copy_inode_to_block(blockNum, &dinode);
     } else if (dirp->d_type == DT_REG) {
       inode finode;
       finode.type = TYPE_FILE;
@@ -118,17 +120,17 @@ void walk(char *dir_name, inode *now_inode, u32 now_inode_num) {
         finode.filename[i] = dirp->d_name[i];
       }
       finode.filename[i] = '\0';
-      char *tmp = (char *)malloc(strlen(dir_name) + strlen(dirp->d_name) + 1);
-      sprintf(tmp, "%s/%s", dir_name, dirp->d_name);
+      char *tmp = (char *)malloc(strlen(dirName) + strlen(dirp->d_name) + 1);
+      sprintf(tmp, "%s/%s", dirName, dirp->d_name);
       struct stat buf;
       stat(tmp, &buf);
       finode.size = buf.st_size;
       finode.blocks = (finode.size - 1) / BLOCK_SIZE + 1;
 
-      block_num = get_free_block();
+      blockNum = get_free_block();
 
       u32 l = finode.size;
-      int block_index = 0;
+      int blockIndex = 0;
       FILE *fp = fopen(tmp, "rb");
       while (l) {
         int ffb = get_free_block();
@@ -140,36 +142,46 @@ void walk(char *dir_name, inode *now_inode, u32 now_inode_num) {
           size = l;
         fread(buffer, size, 1, fp);
         l -= size;
-        if (block_index < 12) {
-          finode.direct[block_index] = ffb;
+        if (blockIndex < 12) {
+          inode_item ii = {"", ffb};
+          finode.direct[blockIndex] = ii;
         } else {
           if (finode.indirect == 0) {
             finode.indirect = get_free_block();
           }
-          u32 *inaddr = (u32 *)get_block_addr(finode.indirect);
-          inaddr[block_index - 12] = ffb;
+          inode_item *inaddr = (inode_item *)get_block_addr(finode.indirect);
+          inode_item ii = {"", ffb};
+          inaddr[blockIndex - 12] = ii;
         }
-        block_index++;
+        blockIndex++;
       }
       fclose(fp);
-      copy_inode_to_block(block_num, &finode);
+      copy_inode_to_block(blockNum, &finode);
     } else {
       continue;
     }
 
-    if (empty_index < 12) {
-      now_inode->direct[empty_index] = block_num;
-    } else {
-      if (now_inode->indirect == 0) {
-        now_inode->indirect = get_free_block();
-      }
-      u32 *inaddr = (u32 *)get_block_addr(now_inode->indirect);
-      inaddr[empty_index - 12] = block_num;
+    inode_item nowItem;
+    nowItem.block = blockNum;
+    int i;
+    for (i = 0; i < strlen(dirp->d_name); i++) {
+      nowItem.filename[i] = dirp->d_name[i];
     }
-    empty_index++;
+    nowItem.filename[i] = '\0';
+
+    if (emptyIndex < 12) {
+      nowInode->direct[emptyIndex] = nowItem;
+    } else {
+      if (nowInode->indirect == 0) {
+        nowInode->indirect = get_free_block();
+      }
+      inode_item *inaddr = (inode_item *)get_block_addr(nowInode->indirect);
+      inaddr[emptyIndex - 12] = nowItem;
+    }
+    emptyIndex++;
   }
   closedir(dp);
-  now_inode->blocks = empty_index;
+  nowInode->blocks = emptyIndex;
 }
 
 u64 get_block_addr(int block_num) {
@@ -179,8 +191,7 @@ u64 get_block_addr(int block_num) {
 }
 
 int get_free_block() {
-  int i;
-  for (i = 0; i < BLOCK_NUM; i++) {
+  for (int i = 0; i < BLOCK_NUM; i++) {
     if (!free_map[i]) {
       free_map[i] = 1;
       --free_num;

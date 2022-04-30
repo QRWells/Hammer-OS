@@ -85,12 +85,13 @@ mapping new_user_mapping(char *elf);
 usize convert_elf_flags(u32 flags);
 
 // syscall.c
-usize sys_read(usize fd, u8 *base, usize len);
-usize sys_exec(char *path);
 usize syscall(usize id, usize args[3], interrupt_context *context);
 
 // fs.c
 void init_fs();
+int alloc_fd(thread *thread);
+void dealloc_fd(thread *thread, int fd);
+
 
 // string.c
 int strcmp(char *s1, char *s2);

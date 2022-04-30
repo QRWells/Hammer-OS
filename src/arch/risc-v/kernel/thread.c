@@ -49,15 +49,22 @@ usize new_kthread_context(usize entry, usize kstack_top, usize satp) {
 
 thread new_kthread(usize entry) {
   usize stackBottom = new_kstack();
+  process p;
+  p.satp = r_satp();
+  for (int i = 0; i < 3; i++)
+    p.fd_occupied[i] = 1;
   usize contextAddr =
-      new_kthread_context(entry, stackBottom + KERNEL_STACK_SIZE, r_satp());
+      new_kthread_context(entry, stackBottom + KERNEL_STACK_SIZE, p.satp);
   printf("kthread entry at: %p\n", entry);
-  thread t = {contextAddr, stackBottom};
+  thread t = {contextAddr, stackBottom, p, -1};
   return t;
 }
 
 thread new_boot_thread() {
-  thread t = {0L, 0L};
+  thread t;
+  t.context_addr = 0L;
+  t.kstack = 0L;
+  t.waiting_tid = -1;
   return t;
 }
 
@@ -109,10 +116,13 @@ thread new_uthread(char *data) {
 
   usize kstack = new_kstack();
   usize entry_addr = ((elf_header *)data)->entry;
-  printf("uthread entry at: %p\n", entry_addr);
-  process p = {m.root_ppn | (1L << 63)};
+  // printf("uthread entry at: %p\n", entry_addr);
+  process p;
+  p.satp = m.root_ppn | (1L << 63);
+  for (int i = 0; i < 3; i++)
+    p.fd_occupied[i] = 1;
   usize context = new_uthread_context(entry_addr, ustack_top,
                                       kstack + KERNEL_STACK_SIZE, p.satp);
-  thread t = {context, kstack, p};
+  thread t = {context, kstack, p, -1};
   return t;
 }

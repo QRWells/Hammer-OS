@@ -17,8 +17,7 @@ pte *find_entry(mapping self, usize vpn) {
   page_table *root_table = (page_table *)pa_to_va(self.root_ppn << 12);
   usize *levels = get_vpn_levels(vpn);
   pte *entry = &(root_table->entries[levels[0]]);
-  int i;
-  for (i = 1; i <= 2; i++) {
+  for (int i = 1; i <= 2; i++) {
     if (*entry == 0) {
       // create new page table if not exist
       usize new_ppn = alloc_frame() >> 12;

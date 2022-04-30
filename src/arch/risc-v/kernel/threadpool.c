@@ -8,8 +8,7 @@ thread_pool new_thread_pool(scheduler scheduler) {
 }
 
 int alloc_tid(thread_pool *pool) {
-  int i;
-  for (i = 0; i < MAX_THREAD; i++)
+  for (int i = 0; i < MAX_THREAD; i++)
     // allocate an unused space, return tid
     if (!pool->threads[i].occupied)
       return i;

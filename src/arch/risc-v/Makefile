@@ -28,6 +28,7 @@ USYSPROGS =                 \
     $U/entry.o       		\
     $U/malloc.o      		\
     $U/io.o 				\
+	$U/string.o       		\
 
 UPROGS =				  	\
     test 					\

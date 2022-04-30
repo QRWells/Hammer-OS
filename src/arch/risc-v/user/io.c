@@ -36,10 +36,9 @@ static void printint(int xx, int base, int sign) {
 }
 
 static void printptr(u64 x) {
-  int i;
   putchar('0');
   putchar('x');
-  for (i = 0; i < (sizeof(u64) * 2); i++, x <<= 4)
+  for (int i = 0; i < (sizeof(u64) * 2); i++, x <<= 4)
     putchar(digits[x >> (sizeof(u64) * 8 - 4)]);
 }
 
