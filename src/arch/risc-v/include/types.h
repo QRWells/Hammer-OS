@@ -13,4 +13,6 @@ typedef unsigned long u64;
 
 typedef unsigned long usize;
 
+#define NULL 0
+
 #endif // _TYPES_H_

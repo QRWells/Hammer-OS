@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "defs.h"
 
-typedef struct {
+typedef struct Node {
   int tid;
 } tinfo;
 

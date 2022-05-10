@@ -46,6 +46,7 @@ typedef struct {
   int (*pop)(void);
   // remind the scheduler that the current thread has run for one tick
   // return value indicates whether the current thread should be switched out
+  // 0: no, 1: yes
   int (*tick)(void);
   // terminate a thread
   void (*exit)(int);

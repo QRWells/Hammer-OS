@@ -68,6 +68,32 @@ thread new_boot_thread() {
   return t;
 }
 
+void test_thread(usize arg) {
+  printf("Begin of thread %d\n", arg);
+  int i;
+  for (i = 0; i < 1000; i++)
+    printf("%d", arg);
+
+  printf("\nEnd of thread %d\n", arg);
+  exit_from_cpu(0);
+  while (1)
+    ;
+}
+
+void append_arguments(thread *thread, usize args[8]) {
+  thread_context *ptr2 = (thread_context *)thread->context_addr;
+  interrupt_context *ptr =
+      (interrupt_context *)((u64)ptr2 + sizeof(thread_context));
+  ptr->x[10] = args[0];
+  ptr->x[11] = args[1];
+  ptr->x[12] = args[2];
+  ptr->x[13] = args[3];
+  ptr->x[14] = args[4];
+  ptr->x[15] = args[5];
+  ptr->x[16] = args[6];
+  ptr->x[17] = args[7];
+}
+
 void init_thread() {
   scheduler s = {scheduler_init, scheduler_push, scheduler_pop, scheduler_tick,
                  scheduler_exit};
@@ -75,6 +101,14 @@ void init_thread() {
   thread_pool pool = new_thread_pool(s);
   thread idle = new_kthread((usize)idle_main);
   init_cpu(idle, pool);
+
+  for (usize i = 0; i < 5; i++) {
+    thread t = new_kthread((usize)test_thread);
+    usize args[8];
+    args[0] = i;
+    append_arguments(&t, args);
+    add_to_cpu(t);
+  }
 
   inode *test_inode = lookup(0, "/bin/sh");
   char *buf = kalloc(test_inode->size);
