@@ -75,6 +75,7 @@ void supervisor_external() {
 void fault(interrupt_context *context, usize scause, usize stval) {
   printf("Unhandled interrupt!\nscause\t= %p\nsepc\t= %p\nstval\t= %p\n",
          scause, context->sepc, stval);
+  // backtrace();
   panic("");
 }
 

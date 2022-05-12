@@ -1,6 +1,8 @@
 #include <stdarg.h>
 #include "types.h"
 #include "defs.h"
+#include "memory.h"
+#include "riscv.h"
 
 static char digits[] = "0123456789abcdef";
 
@@ -74,5 +76,15 @@ void printf(char *fmt, ...) {
       console_putchar(c);
       break;
     }
+  }
+}
+
+void backtrace() {
+  u64 fp = r_fp();
+  u64 top = PGROUNDUP(fp);
+  printf("backtrace:\n");
+  while (fp != top) {
+    printf("%p\n", *(u64 *)(fp - 8));
+    fp = *(u64 *)(fp - 16);
   }
 }

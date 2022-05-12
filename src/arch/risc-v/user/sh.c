@@ -34,7 +34,8 @@ int test_str(char *str, char *target) {
         return 0;
       }
     }
-    if (str[2] != ' ' && str[2] != '\t' && str[2] != '\0')
+    if (str[target_len] != ' ' && str[target_len] != '\t' &&
+        str[target_len] != '\0')
       return 0;
   }
   return 1;
@@ -75,8 +76,8 @@ u64 main() {
   char line[256];
   int lineCount = 0;
   int fd = sys_open("/");
-  printf("Welcome to Moonix!\n");
-  printf("$ ");
+  printf("Welcome!\n");
+  printf("> ");
   while (1) {
     u8 c = getc();
     switch (c) {
@@ -92,13 +93,13 @@ u64 main() {
         lineCount = 0;
         empty(line, 256);
       }
-      printf("$ ");
+      printf("> ");
       break;
     case CTRLC:
       printf("\n");
       lineCount = 0;
       empty(line, 256);
-      printf("$ ");
+      printf("> ");
       break;
     case DL:
       if (lineCount > 0) {

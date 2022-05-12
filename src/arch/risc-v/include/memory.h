@@ -7,6 +7,9 @@
 // page size
 #define PAGE_SIZE 4096
 
+#define PGROUNDUP(sz) (((sz) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+#define PGROUNDDOWN(a) (((a)) & ~(PAGE_SIZE - 1))
+
 #define MEMORY_START_PADDR 0x80000000 // accessable memory start address
 #define MEMORY_END_PADDR 0x88000000   // accessable memory end address
 #define KERNEL_BEGIN_PADDR 0x80200000 // start of physical address of kernel

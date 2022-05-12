@@ -15,6 +15,7 @@ void shutdown();
 
 // printf.c
 void printf(char *fmt, ...);
+void backtrace();
 
 // interrupt.c
 void init_interrupt();
@@ -91,7 +92,6 @@ usize syscall(usize id, usize args[3], interrupt_context *context);
 void init_fs();
 int alloc_fd(thread *thread);
 void dealloc_fd(thread *thread, int fd);
-
 
 // string.c
 int strcmp(char *s1, char *s2);

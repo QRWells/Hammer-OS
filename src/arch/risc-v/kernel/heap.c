@@ -51,6 +51,7 @@ u32 buddy_alloc(u32 size) {
 
   // there is no enough space
   if (buddy_tree.longest[0] < size) {
+    panic("no enough space");
     return -1;
   }
 

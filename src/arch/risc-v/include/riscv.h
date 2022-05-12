@@ -81,4 +81,10 @@ static inline void restore_sstatus(usize flags) {
   asm volatile("csrs sstatus, %0" ::"r"(flags));
 }
 
+static inline u64 r_fp() {
+  u64 x;
+  asm volatile("mv %0, s0" : "=r"(x));
+  return x;
+}
+
 #endif // _RISCV_H_

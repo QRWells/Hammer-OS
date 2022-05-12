@@ -23,7 +23,7 @@ OBJS =                		\
 	$K/cond_var.o			\
 	$K/stdin.o				\
 	$K/linked_list.o		\
-	$K/$S/mlfq_scheduler.o 	\
+	$K/$S/fcfs_scheduler.o 	\
 
 USYSPROGS =                 \
     $U/entry.o       		\
