@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "thread.h"
+#include "riscv.h"
 
 thread_pool new_thread_pool(scheduler scheduler) {
   thread_pool pool;
@@ -36,6 +37,8 @@ running_thread acquire_from_pool(thread_pool *pool) {
   thread_info *ti = &pool->threads[tid];
   ti->status = (thread_state)RUNNING;
   ti->tid = tid;
+  if (ti->thread.start_time == 0)
+    ti->thread.start_time = r_time();
   rt.thread = ti->thread;
 
   return rt;

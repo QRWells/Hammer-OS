@@ -23,6 +23,9 @@ typedef struct {
   usize kstack;       // bottom of stack
   process process;    // process it belongs to
   int waiting_tid;    // tid of the thread that is waiting for this thread
+  usize arrive_time;
+  usize start_time;
+  usize end_time;
 } thread;
 
 typedef enum { READY, RUNNING, SLEEPING, EXITED } thread_state;

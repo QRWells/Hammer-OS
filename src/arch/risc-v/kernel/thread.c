@@ -56,7 +56,7 @@ thread new_kthread(usize entry) {
   usize contextAddr =
       new_kthread_context(entry, stackBottom + KERNEL_STACK_SIZE, p.satp);
   printf("kthread entry at: %p\n", entry);
-  thread t = {contextAddr, stackBottom, p, -1};
+  thread t = {contextAddr, stackBottom, p, -1, 0, 0, 0};
   return t;
 }
 
@@ -157,6 +157,6 @@ thread new_uthread(char *data) {
     p.fd_occupied[i] = 1;
   usize context = new_uthread_context(entry_addr, ustack_top,
                                       kstack + KERNEL_STACK_SIZE, p.satp);
-  thread t = {context, kstack, p, -1};
+  thread t = {context, kstack, p, -1, 0, 0, 0};
   return t;
 }

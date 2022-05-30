@@ -11,11 +11,18 @@ void init_cpu(thread idle, thread_pool pool) {
   cpu.occupied = 0;
 }
 
-void add_to_cpu(thread thread) { add_to_pool(&cpu.pool, thread); }
+void add_to_cpu(thread thread) {
+  thread.arrive_time = r_time();
+  add_to_pool(&cpu.pool, thread);
+}
 
 void exit_from_cpu(usize code) {
   disable_and_store();
   int tid = cpu.current.tid;
+  cpu.current.thread.end_time = r_time();
+  printf("Thread %d arrived at %d\n", tid, cpu.current.thread.arrive_time);
+  printf("Thread %d started at %d\n", tid, cpu.current.thread.start_time);
+  printf("Thread %d exited at %d\n", tid, cpu.current.thread.end_time);
   exit_from_pool(&cpu.pool, tid);
   if (cpu.current.thread.waiting_tid != -1)
     wakeup_cpu(cpu.current.thread.waiting_tid);
