@@ -15,14 +15,21 @@ const usize SYS_READ = 63;
 const usize SYS_WRITE = 64;
 const usize SYS_EXIT = 93;
 const usize SYS_EXEC = 221;
+const usize SYS_CREATE_THREAD = 235;
 
 usize sys_read(usize fd, u8 *base, usize len) {
   *base = (u8)pop_char();
   return 1;
 }
 
-usize sys_exec(char *path) {
-  if (execute_cpu(path, get_current_tid()))
+usize sys_exec(char *path, int fd) {
+  inode *cur = get_current_thread()->process.fd[fd].inode;
+  inode *i = lookup(cur, path);
+  if (i == NULL) {
+    printf("Command not found!\n");
+    return 0;
+  }
+  if (execute_cpu(i, get_current_tid()))
     yield_cpu();
 
   return 0;
@@ -78,12 +85,25 @@ void sys_pwd(int fd) {
   inode *current = get_current_thread()->process.fd[fd].inode;
   char buf[256];
   char *path = get_inode_path(current, buf);
-  printf("%s\n", path);
+  printf("%s", path);
 }
 
 void sys_close(int fd) {
   thread *t = get_current_thread();
   dealloc_fd(t, fd);
+}
+
+void sys_create_thread(u64 addr) {
+  thread *t = get_current_thread();
+
+  usize entry_addr = addr;
+  usize kstack = new_kstack();
+  usize ustack_top = USER_STACK_OFFSET + USER_STACK_SIZE;
+  usize context = new_uthread_context(
+      entry_addr, ustack_top, kstack + KERNEL_STACK_SIZE, t->process.satp);
+
+  thread new = {context, kstack, t->process, -1, 0, 0, 0};
+  add_to_cpu(new);
 }
 
 usize syscall(usize id, usize args[3], interrupt_context *context) {
@@ -114,7 +134,10 @@ usize syscall(usize id, usize args[3], interrupt_context *context) {
     exit_from_cpu(args[0]);
     return 0;
   case SYS_EXEC:
-    sys_exec((char *)args[0]);
+    sys_exec((char *)args[0], args[1]);
+    return 0;
+  case SYS_CREATE_THREAD:
+    sys_create_thread(args[0]);
     return 0;
   default:
     printf("Unknown syscall id %d\n", id);

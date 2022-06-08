@@ -90,14 +90,13 @@ void wakeup_cpu(int tid) {
   scheduler_push(tid);
 }
 
-int execute_cpu(char *path, int hostTid) {
-  inode *res = lookup(0, path);
-  if (res == 0) {
-    printf("Command not found!\n");
+int execute_cpu(inode *node, int hostTid) {
+  if (node->type == TYPE_DIR) {
+    printf("%s: is a directory!\n", node->filename);
     return 0;
   }
-  char *buf = kalloc(res->size);
-  read_all(res, buf);
+  char *buf = kalloc(node->size);
+  read_all(node, buf);
   thread t = new_uthread(buf);
   t.waiting_tid = hostTid;
   kfree(buf);

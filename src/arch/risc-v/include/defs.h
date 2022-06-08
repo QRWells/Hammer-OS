@@ -50,6 +50,9 @@ void map_ext_interrupt_area(mapping m);
 
 // thread.c
 void init_thread();
+usize new_kstack();
+usize new_uthread_context(usize entry, usize ustack_top, usize kstack_top,
+                          usize satp);
 thread new_uthread(char *data);
 void switch_thread(thread *self, thread *target);
 
@@ -72,7 +75,7 @@ int get_current_tid();
 thread *get_current_thread();
 void yield_cpu();
 void wakeup_cpu(int tid);
-int execute_cpu(char *path, int hostTid);
+int execute_cpu(inode *node, int hostTid);
 
 // scheduler interface
 void scheduler_init();
@@ -96,6 +99,8 @@ void dealloc_fd(thread *thread, int fd);
 // string.c
 int strcmp(char *s1, char *s2);
 int strlen(char *s);
+
+// process.c
 
 // stdin.c
 #ifndef _STDIN_H_

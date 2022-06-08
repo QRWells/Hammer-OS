@@ -107,7 +107,7 @@ void map_kernel() {
 }
 
 // map a segment that has been allocated physical memory
-// and copy date to new allocated memory
+// and copy data to new allocated memory
 void map_framed_and_copy(mapping m, segment segment, char *data, usize length) {
   usize s = (usize)data, l = length;
   usize start_vpn = segment.start_va / PAGE_SIZE;

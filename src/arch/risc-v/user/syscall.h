@@ -12,6 +12,7 @@ typedef enum {
   WRITE = 64,
   EXIT = 93,
   EXEC = 221,
+  CREATE_THREAD = 235,
 } syscall_id;
 
 #define sys_call(__num, __a0, __a1, __a2, __a3)                                \
@@ -38,6 +39,7 @@ typedef enum {
 #define sys_write(__a0) sys_call(WRITE, __a0, 0, 0, 0)
 #define sys_exit(__a0) sys_call(EXIT, __a0, 0, 0, 0)
 #define sys_exec(__a0, __a1) sys_call(EXEC, __a0, __a1, 0, 0)
+#define sys_create_thread(__a0) sys_call(CREATE_THREAD, __a0, 0, 0, 0)
 
 #ifdef __INTELLISENSE__
 #pragma diag_suppress 1118

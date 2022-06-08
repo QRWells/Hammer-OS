@@ -5,12 +5,7 @@
 #include "interrupt.h"
 #include "types.h"
 #include "fs.h"
-
-typedef struct {
-  usize satp;
-  file fd[16];
-  u8 fd_occupied[16];
-} process;
+#include "process.h"
 
 typedef struct {
   usize ra;    // return address register

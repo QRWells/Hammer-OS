@@ -24,5 +24,6 @@ extern void kernel_end();
 #define USER_STACK_OFFSET 0xffffffff00000000
 
 #define MAX_THREAD 0x40
+#define MAX_PROCESS_CHILDREN 0x8
 
 #endif // _CONSTANTS_H_

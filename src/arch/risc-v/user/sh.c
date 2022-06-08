@@ -67,6 +67,7 @@ int is_builtin(char *line, int fd) {
   }
   if (test_str(line, "pwd")) {
     sys_pwd(fd);
+    printf("\n");
     return 1;
   }
   return 0;
@@ -77,7 +78,8 @@ u64 main() {
   int lineCount = 0;
   int fd = sys_open("/");
   printf("Welcome!\n");
-  printf("> ");
+  sys_pwd(fd);
+  printf(" > ");
   while (1) {
     u8 c = getc();
     switch (c) {
@@ -88,18 +90,21 @@ u64 main() {
         char *strip = line;
         while (*strip == ' ' || *strip == '\t')
           strip++;
-        if (!is_builtin(strip, fd))
+        if (!is_builtin(strip, fd)) {
           sys_exec(strip, fd);
+        }
         lineCount = 0;
         empty(line, 256);
       }
-      printf("> ");
+      sys_pwd(fd);
+      printf(" > ");
       break;
     case CTRLC:
       printf("\n");
       lineCount = 0;
       empty(line, 256);
-      printf("> ");
+      sys_pwd(fd);
+      printf(" > ");
       break;
     case DL:
       if (lineCount > 0) {

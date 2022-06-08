@@ -102,14 +102,6 @@ void init_thread() {
   thread idle = new_kthread((usize)idle_main);
   init_cpu(idle, pool);
 
-  for (usize i = 0; i < 10; i++) {
-    thread t = new_kthread((usize)test_thread);
-    usize args[8];
-    args[0] = i;
-    append_arguments(&t, args);
-    add_to_cpu(t);
-  }
-
   inode *test_inode = lookup(0, "/bin/sh");
   char *buf = kalloc(test_inode->size);
   read_all(test_inode, buf);
