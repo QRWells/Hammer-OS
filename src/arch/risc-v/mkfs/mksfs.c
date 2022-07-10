@@ -21,7 +21,7 @@ char *rootdir = "rootfs";
 // file system's final image
 char image[BLOCK_SIZE * BLOCK_NUM];
 
-void main() {
+int main() {
   free_map[0] = 1;
   for (int i = 0; i < FREEMAP_NUM; i++)
     free_map[1 + i] = 1;
@@ -74,6 +74,8 @@ void main() {
   fwrite(image, sizeof(image), 1, img);
   fflush(img);
   fclose(img);
+
+  return 0;
 }
 
 void walk(char *dirName, inode *nowInode, u32 nowInodeNum) {

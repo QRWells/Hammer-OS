@@ -39,6 +39,7 @@ void kfree(void *p);
 
 // memory.c
 void init_memory();
+void init_memory_other();
 usize alloc_frame();
 
 // mapping.c

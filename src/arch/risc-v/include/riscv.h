@@ -64,6 +64,8 @@ static inline u64 r_satp() {
   return x;
 }
 
+static inline void w_satp(u64 x) { asm volatile("csrw satp, %0" : : "r"(x)); }
+
 // enable asynchroneous interrupt, wait for interrupt
 static inline void enable_and_wfi() {
   asm volatile("csrsi sstatus, 1 << 1; wfi");

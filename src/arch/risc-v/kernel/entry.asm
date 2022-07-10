@@ -2,22 +2,24 @@
     .globl _start
     # set sp and jump to kmain
 _start:
+
+    mv      tp, a0
+    add     t0, a0, 1
+    slli    t0, t0, 16
+    lui     sp, %hi(bootstack)
+    add     sp, sp, t0
+
     # compute the ppn of bootpagetable
     lui t0, %hi(bootpagetable)
     li t1, 0xffffffff00000000
     sub t0, t0, t1
     srli t0, t0, 12
     # set to SV39
-    # TODO: SV48 version
     li t1, (8 << 60)
     or t0, t0, t1
     # write to satp and flush TLB
     csrw satp, t0
     sfence.vma
-
-    # load stack address
-    lui sp, %hi(bootstacktop)
-    addi sp, sp, %lo(bootstacktop)
 
     # jump to main
     lui t0, %hi(main)
@@ -29,7 +31,7 @@ _start:
     .global bootstack
 bootstack:
     # 64KB boot stack
-    .space 1024 * 64
+    .space 4096 * 16 * 8
     .global bootstacktop
 bootstacktop:
 

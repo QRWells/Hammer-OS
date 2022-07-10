@@ -39,14 +39,22 @@ void test_alloc() {
   printf("alloc %p\n", alloc_frame());
 }
 
+volatile usize SATP = 0;
+
 void init_memory() {
   w_sstatus(r_sstatus() | SSTATUS_SUM);
   init_frame_allocator((((usize)(kernel_end)-KERNEL_MAP_OFFSET) >> 12) + 1,
                        MEMORY_END_PADDR >> 12);
   init_heap();
   map_kernel();
+  SATP = r_satp();
   printf("***** Init Memory *****\n");
-  // test_alloc();
+}
+
+void init_memory_other() {
+  w_sstatus(r_sstatus() | SSTATUS_SUM);
+  w_satp(SATP);
+  asm volatile("sfence.vma" :::);
 }
 
 // implementations of allocator using segment tree

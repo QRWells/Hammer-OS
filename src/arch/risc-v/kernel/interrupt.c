@@ -5,6 +5,7 @@
 #include "types.h"
 
 asm(".include \"interrupt.asm\"");
+// asm(".include \"trap.S\"");
 
 // enable interrupts directly by write kernel memory
 void init_external_interrupt() {
@@ -20,11 +21,15 @@ void init_serial_interrupt() {
 
 void init_interrupt() {
   extern void __interrupt();
-  w_stvec((usize)__interrupt | MODE_DIRECT);
-  w_sie(r_sie() | SIE_SEIE);
+  // w_stvec((usize)__interrupt | MODE_DIRECT);
+  // w_sie(r_sie() | SIE_SEIE);
 
-  init_external_interrupt();
-  init_serial_interrupt();
+  // init_external_interrupt();
+  // init_serial_interrupt();
+
+  asm volatile("csrw sscratch, 0");
+  // Set the exception vector address
+  w_stvec((usize)__interrupt);
 
   printf("***** Init Interrupt *****\n");
 }
