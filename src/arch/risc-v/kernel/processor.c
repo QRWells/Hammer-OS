@@ -3,52 +3,59 @@
 #include "riscv.h"
 #include "thread.h"
 
-static processor cpu;
+static processor cpu[MAX_CPU];
 
 void init_cpu(thread idle, thread_pool pool) {
-  cpu.idle = idle;
-  cpu.pool = pool;
-  cpu.occupied = 0;
+  usize cpuid = r_tp();
+  cpu[cpuid].idle = idle;
+  cpu[cpuid].pool = pool;
+  cpu[cpuid].occupied = 0;
 }
 
 void add_to_cpu(thread thread) {
+  usize cpuid = r_tp();
   thread.arrive_time = r_time();
-  add_to_pool(&cpu.pool, thread);
+  add_to_pool(&cpu[cpuid].pool, thread);
 }
 
 void exit_from_cpu(usize code) {
   disable_and_store();
-  int tid = cpu.current.tid;
-  cpu.current.thread.end_time = r_time();
-  printf("Thread %d arrived at %d\n", tid, cpu.current.thread.arrive_time);
-  printf("Thread %d started at %d\n", tid, cpu.current.thread.start_time);
-  printf("Thread %d exited at %d\n", tid, cpu.current.thread.end_time);
-  exit_from_pool(&cpu.pool, tid);
-  if (cpu.current.thread.waiting_tid != -1)
-    wakeup_cpu(cpu.current.thread.waiting_tid);
+  usize cpuid = r_tp();
+  int tid = cpu[cpuid].current.tid;
+  cpu[cpuid].current.thread.end_time = r_time();
+  printf("Thread %d arrived at %d\n", tid,
+         cpu[cpuid].current.thread.arrive_time);
+  printf("Thread %d started at %d\n", tid,
+         cpu[cpuid].current.thread.start_time);
+  printf("Thread %d exited at %d\n", tid, cpu[cpuid].current.thread.end_time);
+  exit_from_pool(&cpu[cpuid].pool, tid);
+  if (cpu[cpuid].current.thread.waiting_tid != -1)
+    wakeup_cpu(cpu[cpuid].current.thread.waiting_tid);
 
-  switch_thread(&cpu.current.thread, &cpu.idle);
+  switch_thread(&cpu[cpuid].current.thread, &cpu[cpuid].idle);
 }
 
 void run_cpu() {
   // from boot thread to idle and never switch back
+  usize cpuid = r_tp();
   thread boot;
   boot.context_addr = 0;
   boot.kstack = 0;
   boot.waiting_tid = -1;
-  switch_thread(&boot, &cpu.idle);
+  switch_thread(&boot, &cpu[cpuid].idle);
 }
 
 void idle_main() {
   disable_and_store();
+  usize cpuid = r_tp();
   while (1) {
-    running_thread rt = acquire_from_pool(&cpu.pool);
+    running_thread rt = acquire_from_pool(&cpu[cpuid].pool);
     if (rt.tid != -1) {
-      cpu.current = rt;
-      cpu.occupied = 1;
-      switch_thread(&cpu.idle, &cpu.current.thread);
-      cpu.occupied = 0;
-      retrieve_to_pool(&cpu.pool, cpu.current);
+      cpu[cpuid].current = rt;
+      cpu[cpuid].occupied = 1;
+      switch_thread(&cpu[cpuid].idle, &cpu[cpuid].current.thread);
+      cpu[cpuid].occupied = 0;
+      retrieve_to_pool(&cpu[cpuid].pool, cpu[cpuid].current);
     } else {
       enable_and_wfi();
       disable_and_store();
@@ -57,35 +64,42 @@ void idle_main() {
 }
 
 void tick_cpu() {
-  if (!cpu.occupied)
-    return;
-  if (!tick_pool(&cpu.pool))
-    return;
+  usize cpuid = r_tp();
+  if (!cpu[cpuid].occupied) return;
+  if (!tick_pool(&cpu[cpuid].pool)) return;
   // when runs out the time slice, switch back to idle
   usize flags = disable_and_store();
-  switch_thread(&cpu.current.thread, &cpu.idle);
+  switch_thread(&cpu[cpuid].current.thread, &cpu[cpuid].idle);
 
   // switch back to current thread and restore flags
   restore_sstatus(flags);
 }
 
-int get_current_tid() { return cpu.current.tid; }
-thread *get_current_thread() { return &cpu.current.thread; }
+int get_current_tid() {
+  usize cpuid = r_tp();
+  return cpu[cpuid].current.tid;
+}
+thread *get_current_thread() {
+  usize cpuid = r_tp();
+  return &cpu[cpuid].current.thread;
+}
 
 void yield_cpu() {
-  if (cpu.occupied) {
+  usize cpuid = r_tp();
+  if (cpu[cpuid].occupied) {
     usize flags = disable_and_store();
-    int tid = cpu.current.tid;
-    thread_info *ti = &cpu.pool.threads[tid];
+    int tid = cpu[cpuid].current.tid;
+    thread_info *ti = &cpu[cpuid].pool.threads[tid];
     ti->status = SLEEPING;
-    switch_thread(&cpu.current.thread, &cpu.idle);
+    switch_thread(&cpu[cpuid].current.thread, &cpu[cpuid].idle);
 
     restore_sstatus(flags);
   }
 }
 
 void wakeup_cpu(int tid) {
-  thread_info *ti = &cpu.pool.threads[tid];
+  usize cpuid = r_tp();
+  thread_info *ti = &cpu[cpuid].pool.threads[tid];
   ti->status = READY;
   scheduler_push(tid);
 }

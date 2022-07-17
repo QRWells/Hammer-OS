@@ -22,9 +22,9 @@ static inline void w_stvec(usize x) {
   asm volatile("csrw stvec, %0" : : "r"(x));
 }
 
-#define SIE_SEIE (1L << 9) // external interrupt
-#define SIE_STIE (1L << 5) // clock interrupt
-#define SIE_SSIE (1L << 1) // software interrupt
+#define SIE_SEIE (1L << 9)  // external interrupt
+#define SIE_STIE (1L << 5)  // clock interrupt
+#define SIE_SSIE (1L << 1)  // software interrupt
 
 static inline usize r_sie() {
   usize x;
@@ -37,8 +37,8 @@ static inline void w_sie(usize x) { asm volatile("csrw sie, %0" : : "r"(x)); }
 #define SSTATUS_SUM (1L << 18)
 #define SSTATUS_SPP (1L << 8)
 #define SSTATUS_SPIE (1L << 5)
-#define SSTATUS_SIE (1L << 1) // Supervisor mode Interrupt Enable
-#define SSTATUS_UIE (1L << 0) // User mode Interrupt Enable
+#define SSTATUS_SIE (1L << 1)  // Supervisor mode Interrupt Enable
+#define SSTATUS_UIE (1L << 0)  // User mode Interrupt Enable
 
 // Supervisor Status Register
 static inline usize r_sstatus() {
@@ -89,4 +89,12 @@ static inline u64 r_fp() {
   return x;
 }
 
-#endif // _RISCV_H_
+static inline u64 r_tp() {
+  u64 x;
+  asm volatile("mv %0, tp" : "=r"(x));
+  return x;
+}
+
+static inline void w_tp(u64 x) { asm volatile("mv tp, %0" : : "r"(x)); }
+
+#endif  // _RISCV_H_

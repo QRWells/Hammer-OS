@@ -7,7 +7,7 @@ void setTimeout() { set_timer(r_time() + INTERVAL); }
 
 void init_timer() {
   w_sie(r_sie() | SIE_STIE);
-  // w_sstatus(r_sstatus() | SSTATUS_SIE);
+  w_sstatus(r_sstatus() | SSTATUS_SIE);
   setTimeout();
 }
 

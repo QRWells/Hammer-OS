@@ -9,9 +9,8 @@ asm(".include \"interrupt.asm\"");
 
 // enable interrupts directly by write kernel memory
 void init_external_interrupt() {
-  *(u32 *)(0x0C002080 + KERNEL_MAP_OFFSET) = 0x400U;
-  *(u32 *)(0x0C000028 + KERNEL_MAP_OFFSET) = 0x7U;
-  *(u32 *)(0x0C201000 + KERNEL_MAP_OFFSET) = 0x0U;
+  *(u32 *)(0x0C000004 + KERNEL_MAP_OFFSET) = 0x1U;
+  *(u32 *)(0x0C000028 + KERNEL_MAP_OFFSET) = 0x1U;
 }
 
 void init_serial_interrupt() {
@@ -21,36 +20,42 @@ void init_serial_interrupt() {
 
 void init_interrupt() {
   extern void __interrupt();
-  // w_stvec((usize)__interrupt | MODE_DIRECT);
-  // w_sie(r_sie() | SIE_SEIE);
+  int cpuid = r_tp();
 
-  // init_external_interrupt();
-  // init_serial_interrupt();
+  w_sie(r_sie() | SIE_SEIE | SIE_SSIE);
+
+  if (cpuid == 0) {
+    init_external_interrupt();
+    init_serial_interrupt();
+  }
+
+  *(u32 *)(0x0C002080 + (cpuid * 0x100) + KERNEL_MAP_OFFSET) = 0x402U;
+  *(u32 *)(0x0C201000 + (cpuid * 0x2000) + KERNEL_MAP_OFFSET) = 0x0U;
 
   asm volatile("csrw sscratch, 0");
   // Set the exception vector address
   w_stvec((usize)__interrupt);
 
-  printf("***** Init Interrupt *****\n");
+  printf("init_interrupt: cpuid = %d\n", cpuid);
 }
 
 void handle_interrupt(interrupt_context *context, usize scause, usize stval) {
   switch (scause) {
-  case BREAKPOINT:
-    breakpoint(context);
-    break;
-  case SUPERVISOR_TIMER:
-    supervisor_timer();
-    break;
-  case USER_ENV_CALL:
-    handle_syscall(context);
-    break;
-  case SUPERVISOR_EXTERNAL:
-    supervisor_external();
-    break;
-  default:
-    fault(context, scause, stval);
-    break;
+    case BREAKPOINT:
+      breakpoint(context);
+      break;
+    case SUPERVISOR_TIMER:
+      supervisor_timer();
+      break;
+    case USER_ENV_CALL:
+      handle_syscall(context);
+      break;
+    case SUPERVISOR_EXTERNAL:
+      supervisor_external();
+      break;
+    default:
+      fault(context, scause, stval);
+      break;
   }
 }
 
@@ -78,8 +83,10 @@ void supervisor_external() {
 }
 
 void fault(interrupt_context *context, usize scause, usize stval) {
-  printf("Unhandled interrupt!\nscause\t= %p\nsepc\t= %p\nstval\t= %p\n",
-         scause, context->sepc, stval);
+  printf(
+      "Unhandled interrupt from hart %d!\nscause\t= %p\nsepc\t= "
+      "%p\nstval\t= %p\n",
+      context->x[4], scause, context->sepc, stval);
   // backtrace();
   panic("");
 }

@@ -26,4 +26,6 @@ extern void kernel_end();
 #define MAX_THREAD 0x40
 #define MAX_PROCESS_CHILDREN 0x8
 
+#define MAX_CPU 0x8
+
 #endif // _CONSTANTS_H_

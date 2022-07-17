@@ -59,8 +59,9 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 LDFLAGS = -z max-page-size=4096
 
 SMP = 4
+BIOS = fw_jump.elf
 
-QEMUOPTS = -machine virt -smp $(SMP) -bios default -device loader,file=image,addr=0x80200000 --nographic
+QEMUOPTS = -machine virt -smp $(SMP) -bios $(BIOS) -device loader,file=image,addr=0x80200000 --nographic
 
 all: image
 

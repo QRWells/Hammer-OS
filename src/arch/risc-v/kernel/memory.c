@@ -28,17 +28,6 @@ usize alloc_frame() {
 // startAddr
 void dealloc_frame(usize start_addr) { dealloc(start_addr >> 12); }
 
-void test_alloc() {
-  printf("alloc %p\n", alloc_frame());
-  usize f = alloc_frame();
-  printf("alloc %p\n", f);
-  printf("alloc %p\n", alloc_frame());
-  printf("dealloc %p\n", f);
-  dealloc_frame(f);
-  printf("alloc %p\n", alloc_frame());
-  printf("alloc %p\n", alloc_frame());
-}
-
 volatile usize SATP = 0;
 
 void init_memory() {
@@ -47,6 +36,7 @@ void init_memory() {
                        MEMORY_END_PADDR >> 12);
   init_heap();
   map_kernel();
+  __sync_synchronize();
   SATP = r_satp();
   printf("***** Init Memory *****\n");
 }

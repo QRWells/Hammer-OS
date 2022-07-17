@@ -31,8 +31,7 @@ void buddy_init(int size) {
   u32 node_size = size << 1;
   // initialize all nodes to be free
   for (int i = 0; i < (size << 1) - 1; i++) {
-    if (IS_POWER_OF_2(i + 1))
-      node_size /= 2;
+    if (IS_POWER_OF_2(i + 1)) node_size /= 2;
 
     buddy_tree.longest[i] = node_size;
   }
@@ -128,56 +127,28 @@ void buddy_free(u32 offset) {
   }
 }
 
-// test malloc
-void heap_test() {
-  printf("Heap:\t%p\n", HEAP);
-  void *a = kalloc(100);
-  printf("a:\t%p\n", a);
-  void *b = kalloc(60);
-  printf("b:\t%p\n", b);
-  void *c = kalloc(100);
-  printf("c:\t%p\n", c);
-  kfree(a);
-  void *d = kalloc(30);
-  printf("d:\t%p\n", d);
-  kfree(b);
-  kfree(d);
-  kfree(c);
-  a = kalloc(60);
-  printf("a:\t%p\n", a);
-  kfree(a);
-}
-
-void init_heap() {
-  buddy_init(HEAP_BLOCK_NUM);
-  // heap_test();
-}
+void init_heap() { buddy_init(HEAP_BLOCK_NUM); }
 
 void *kalloc(u32 size) {
-  if (size == 0)
-    return 0;
+  if (size == 0) return 0;
 
   // how many blocks are needed
   u32 n = size / MIN_BLOCK_SIZE + ((size & (MIN_BLOCK_SIZE - 1)) != 0 ? 1 : 0);
   u32 block = buddy_alloc(n);
-  if (block == -1)
-    panic("Failed to allocate memory!\n");
+  if (block == -1) panic("Failed to allocate memory!\n");
 
   // clear part of memory space
   u32 total = fix_size(n) * MIN_BLOCK_SIZE;
   u8 *begin = (u8 *)((usize)HEAP + (usize)(block * MIN_BLOCK_SIZE));
-  for (u32 i = 0; i < total; i++)
-    begin[i] = 0;
+  for (u32 i = 0; i < total; i++) begin[i] = 0;
 
   return (void *)begin;
 }
 
 void kfree(void *ptr) {
   // if ptr is valid
-  if ((usize)ptr < (usize)HEAP)
-    return;
-  if ((usize)ptr >= (usize)HEAP + KERNEL_HEAP_SIZE - MIN_BLOCK_SIZE)
-    return;
+  if ((usize)ptr < (usize)HEAP) return;
+  if ((usize)ptr >= (usize)HEAP + KERNEL_HEAP_SIZE - MIN_BLOCK_SIZE) return;
   // offset of the block in the heap
   u32 offset = (usize)((usize)ptr - (usize)HEAP);
   buddy_free(offset / MIN_BLOCK_SIZE);

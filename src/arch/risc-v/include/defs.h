@@ -51,6 +51,7 @@ void map_ext_interrupt_area(mapping m);
 
 // thread.c
 void init_thread();
+void init_thread_other();
 usize new_kstack();
 usize new_uthread_context(usize entry, usize ustack_top, usize kstack_top,
                           usize satp);

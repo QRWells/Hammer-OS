@@ -35,6 +35,7 @@ usize push_context_to_stack(thread_context tc, interrupt_context ic,
 usize new_kthread_context(usize entry, usize kstack_top, usize satp) {
   interrupt_context ic;
   ic.x[2] = kstack_top;
+  ic.x[4] = r_tp();
   ic.sepc = entry;
   ic.sstatus = r_sstatus();
   ic.sstatus |= SSTATUS_SPP;
@@ -51,8 +52,7 @@ thread new_kthread(usize entry) {
   usize stackBottom = new_kstack();
   process p;
   p.satp = r_satp();
-  for (int i = 0; i < 3; i++)
-    p.fd_occupied[i] = 1;
+  for (int i = 0; i < 3; i++) p.fd_occupied[i] = 1;
   usize contextAddr =
       new_kthread_context(entry, stackBottom + KERNEL_STACK_SIZE, p.satp);
   printf("kthread entry at: %p\n", entry);
@@ -71,27 +71,12 @@ thread new_boot_thread() {
 void test_thread(usize arg) {
   printf("Begin of thread %d\n", arg);
   int i;
-  for (i = 0; i < 1000; i++)
-    printf("%d", arg);
+  for (i = 0; i < 1000; i++) printf("%d", arg);
 
   printf("\nEnd of thread %d\n", arg);
   exit_from_cpu(0);
   while (1)
     ;
-}
-
-void append_arguments(thread *thread, usize args[8]) {
-  thread_context *ptr2 = (thread_context *)thread->context_addr;
-  interrupt_context *ptr =
-      (interrupt_context *)((u64)ptr2 + sizeof(thread_context));
-  ptr->x[10] = args[0];
-  ptr->x[11] = args[1];
-  ptr->x[12] = args[2];
-  ptr->x[13] = args[3];
-  ptr->x[14] = args[4];
-  ptr->x[15] = args[5];
-  ptr->x[16] = args[6];
-  ptr->x[17] = args[7];
 }
 
 void init_thread() {
@@ -113,10 +98,20 @@ void init_thread() {
   printf("***** Init Thread *****\n");
 }
 
+void init_thread_other() {
+  scheduler s = {scheduler_init, scheduler_push, scheduler_pop, scheduler_tick,
+                 scheduler_exit};
+  s.init();
+  thread_pool pool = new_thread_pool(s);
+  thread idle = new_kthread((usize)idle_main);
+  init_cpu(idle, pool);
+}
+
 usize new_uthread_context(usize entry, usize ustack_top, usize kstack_top,
                           usize satp) {
   interrupt_context ic;
   ic.x[2] = ustack_top;
+  ic.x[4] = r_tp();
   ic.sepc = entry;
   ic.sstatus = r_sstatus();
   // set to U-Mode
@@ -145,8 +140,7 @@ thread new_uthread(char *data) {
   // printf("uthread entry at: %p\n", entry_addr);
   process p;
   p.satp = m.root_ppn | (1L << 63);
-  for (int i = 0; i < 3; i++)
-    p.fd_occupied[i] = 1;
+  for (int i = 0; i < 3; i++) p.fd_occupied[i] = 1;
   usize context = new_uthread_context(entry_addr, ustack_top,
                                       kstack + KERNEL_STACK_SIZE, p.satp);
   thread t = {context, kstack, p, -1, 0, 0, 0};
